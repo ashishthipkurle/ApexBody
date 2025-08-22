@@ -1,0 +1,47 @@
+name: apexbody
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.3.0
+  flutter: ">=3.19.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  supabase_flutter: ^2.9.1
+  provider: ^6.1.2
+  url_launcher: ^6.3.1
+  intl: ^0.19.0
+  table_calendar: ^3.1.2
+  uuid: ^4.5.0
+  sign_in_with_apple: ^6.1.0
+  webview_flutter: ^4.8.0
+  app_links: ^3.5.1
+  path_provider: ^2.1.4
+  http: ^0.13.6
+  shared_preferences: ^2.3.2
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/apexbody_logo.png
+    - assets/ApexBody_circle.png
+    - assets/ApexBody_dumbbell.png
+    - assets/Dashboard1.png
+    - assets/Dashboard2.png
+    - assets/Dashboard3.png
+    - assets/Dashboard4.png
+    - assets/Dashboard5.png
+    - assets/Dashboard6.png
+    - assets/Dashboard9.png
