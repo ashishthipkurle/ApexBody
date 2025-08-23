@@ -1,15 +1,46 @@
 
 # ApexBody
 
-This project is the ApexBody Flutter app. Below are quick steps to generate launcher icons from the bundled logo.
+ApexBody is a cross-platform fitness helper app built with Flutter. It helps gym-goers and trainers manage workout sessions, track progress, and access personalized plans. The project is focused on a simple, responsive UI and secure user authentication.
 
-Generate launcher icons (uses `assets/ApexBody_logo.png`):
+Who it's for
+- Gym members who want to track workouts and progress.
+- Personal trainers who need to manage clients and export basic reports.
 
-```bash
-flutter pub get; flutter pub run flutter_launcher_icons:main
+What the app does (high level)
+- User authentication (Supabase)
+- Deep-link based flows (password reset / recovery)
+- Basic dashboard and workout screens
+- Admin exports (CSV) and local persistence with Hive
+
+How it was made
+- Frontend: Flutter (Dart) supporting Android, iOS, web, and desktop targets.
+- Backend integrations: Supabase for authentication and data storage.
+- Local storage: Hive for small export/history persistence.
+- Deep linking: `app_links` package for custom-scheme links.
+- Assets: launcher and UI images stored in `assets/` (logo: `assets/ApexBody_logo.png`).
+
+Quick local setup
+1. Install Flutter and ensure it's on your PATH.
+2. From the project root run these commands in PowerShell:
+
+```powershell
+flutter pub get
+flutter pub run flutter_launcher_icons:main
+flutter run -d <device-id>
 ```
 
-If you prefer to set icons manually, replace the platform icon files under `android/app/src/main/res/`, `ios/Runner/Assets.xcassets/AppIcon.appiconset/`, and the Windows/macOS icon resources.
+Notes for iOS
+- Open `ios/Runner.xcworkspace` in Xcode to set your signing team and provisioning before building to a device or uploading to App Store Connect.
+
+Notes about icons
+- The repo includes `assets/ApexBody_logo.png`. The `flutter_launcher_icons` config in `pubspec.yaml` will generate platform icons from that file when you run the command above.
+
+Contributing
+- Make small, focused branches and open pull requests. Run the app locally and add tests where appropriate.
+
+License
+- This repository does not include a license file. Add one if you plan to publish the code publicly.
 
 ## Getting Started
 
