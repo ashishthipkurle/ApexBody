@@ -1,6 +1,6 @@
 {
-    "name": "apexbody_testing",
-    "short_name": "apexbody_testing",
+    "name": "ApexBody",
+    "short_name": "ApexBody",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

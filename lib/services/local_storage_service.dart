@@ -72,4 +72,45 @@ class LocalStorageService {
       print('[LocalStorage] Failed clearing user: $e');
     }
   }
+
+  // --- Export history helpers ---
+  static const String exportsBox = 'exportsBox';
+
+  static Future<void> addExportRecord(Map<String, dynamic> record) async {
+    try {
+      final box = await Hive.openBox(exportsBox);
+      final list = box.get('records', defaultValue: <Map>[]) as List;
+      final newList = List<Map<String, dynamic>>.from(
+          list.map((e) => Map<String, dynamic>.from(e)));
+      newList.insert(0, record);
+      await box.put('records', newList);
+    } catch (e) {
+      print('[LocalStorage] Failed adding export record: $e');
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getExportRecords() async {
+    try {
+      final box = await Hive.openBox(exportsBox);
+      final list = box.get('records', defaultValue: <Map>[]) as List;
+      return List<Map<String, dynamic>>.from(
+          list.map((e) => Map<String, dynamic>.from(e)));
+    } catch (e) {
+      print('[LocalStorage] Failed getting export records: $e');
+      return [];
+    }
+  }
+
+  static Future<void> removeExportRecordByPath(String path) async {
+    try {
+      final box = await Hive.openBox(exportsBox);
+      final list = box.get('records', defaultValue: <Map>[]) as List;
+      final newList = List<Map<String, dynamic>>.from(
+          list.map((e) => Map<String, dynamic>.from(e)));
+      newList.removeWhere((m) => (m['path'] ?? '') == path);
+      await box.put('records', newList);
+    } catch (e) {
+      print('[LocalStorage] Failed removing export record: $e');
+    }
+  }
 }

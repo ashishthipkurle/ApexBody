@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'attendance_page.dart';
 import 'clients_workouts_page.dart';
 import 'body_analysis_form.dart';
@@ -7,6 +9,9 @@ import 'all_clients_history.dart';
 import 'profile_screen.dart';
 import 'settings_screen.dart';
 import 'gym_dashboard_page.dart';
+import 'exports_page.dart';
+import '../services/local_storage_service.dart';
+// CSV-only export; no excel package required
 import '../providers/data_provider.dart';
 // Removed unused import 'pending_enquiries_page.dart'
 import '../providers/auth_provider.dart';
@@ -123,6 +128,80 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       builder: (_) => const SettingsScreen(),
                     ),
                   );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.download),
+                title: const Text('Download clients (CSV)'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final dp = Provider.of<DataProvider>(context, listen: false);
+                  try {
+                    final clients = await dp.fetchClients();
+                    if (clients.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('No clients to export')));
+                      return;
+                    }
+
+                    // Build CSV content
+                    final headers = [
+                      'id',
+                      'email',
+                      'name',
+                      'phone',
+                      'role',
+                      'weight',
+                      'height',
+                      'age',
+                      'gender'
+                    ];
+                    final rows = <String>[];
+                    rows.add(headers.join(','));
+                    for (final c in clients) {
+                      final map = c.toMap();
+                      final row = headers.map((h) {
+                        final v = map[h];
+                        if (v == null) return '';
+                        final s = v.toString().replaceAll('"', '""');
+                        if (s.contains(',') ||
+                            s.contains('"') ||
+                            s.contains('\n')) {
+                          return '"$s"';
+                        }
+                        return s;
+                      }).join(',');
+                      rows.add(row);
+                    }
+                    final csv = rows.join('\n');
+
+                    // Save to temporary file and record
+                    final dir = await getTemporaryDirectory();
+                    final file = File(
+                        '${dir.path}${Platform.pathSeparator}clients_export_${DateTime.now().millisecondsSinceEpoch}.csv');
+                    await file.writeAsString(csv, flush: true);
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Export saved: ${file.path}')));
+
+                    await LocalStorageService.addExportRecord({
+                      'name': file.path.split(Platform.pathSeparator).last,
+                      'path': file.path,
+                      'timestamp': DateTime.now().toIso8601String(),
+                    });
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Export failed: $e')));
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.history),
+                title: const Text('Exports history'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const ExportsPage()));
                 },
               ),
               ListTile(

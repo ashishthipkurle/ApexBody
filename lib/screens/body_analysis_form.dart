@@ -161,10 +161,11 @@ class _BodyAnalysisFormState extends State<BodyAnalysisForm> {
                           onChanged: (c) => setState(() => selectedClient = c),
                           decoration: InputDecoration(
                             labelText: 'Select Client',
+                            fillColor: Colors.white,
                             border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8)),
                             filled: true,
-                            fillColor: Colors.white.withOpacity(0.6),
+                           // fillColor: Colors.white.withOpacity(0.6),
                             contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 14),
                           ),

@@ -93,14 +93,20 @@ class _DeepLinkShellState extends State<DeepLinkShell> {
     // Listen for incoming app links using app_links
     _sub = _appLinks.uriLinkStream.listen((Uri? uri) {
       if (uri == null) return;
+      print('[DeepLink] received uri: $uri');
       if (uri.scheme == 'apexbody' && uri.host == 'reset') {
-        String? token = uri.queryParameters['access_token'];
+        // Accept either access_token or code (Supabase uses `code`)
+        String? token =
+            uri.queryParameters['access_token'] ?? uri.queryParameters['code'];
         if ((token == null || token.isEmpty) && (uri.fragment.isNotEmpty)) {
           try {
             final frag = Uri.splitQueryString(uri.fragment);
-            token = frag['access_token'];
-          } catch (e) {}
+            token = frag['access_token'] ?? frag['code'];
+          } catch (e) {
+            print('[DeepLink] error parsing fragment: $e');
+          }
         }
+        print('[DeepLink] extracted token/code: $token');
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
@@ -116,14 +122,19 @@ class _DeepLinkShellState extends State<DeepLinkShell> {
     // Also handle initial link when app starts via a deep link
     _appLinks.getInitialAppLink().then((uri) {
       if (uri == null) return;
+      print('[DeepLink] initial uri: $uri');
       if (uri.scheme == 'apexbody' && uri.host == 'reset') {
-        String? token = uri.queryParameters['access_token'];
+        String? token =
+            uri.queryParameters['access_token'] ?? uri.queryParameters['code'];
         if ((token == null || token.isEmpty) && (uri.fragment.isNotEmpty)) {
           try {
             final frag = Uri.splitQueryString(uri.fragment);
-            token = frag['access_token'];
-          } catch (e) {}
+            token = frag['access_token'] ?? frag['code'];
+          } catch (e) {
+            print('[DeepLink] error parsing initial fragment: $e');
+          }
         }
+        print('[DeepLink] initial extracted token/code: $token');
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(

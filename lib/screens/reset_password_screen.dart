@@ -29,13 +29,16 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     if (widget.accessToken == null) {
       final appLinks = AppLinks();
       // Try initial link (app cold start)
-      appLinks.getInitialAppLink().then((uri) {
+      appLinks.getInitialAppLink().then((Uri? uri) {
         if (uri == null) return;
-        String? token = uri.queryParameters['access_token'];
-        if ((token == null || token.isEmpty) && (uri.fragment.isNotEmpty)) {
+        final u = uri;
+        // Accept either access_token or code (Supabase uses `code`)
+        String? token =
+            u.queryParameters['access_token'] ?? u.queryParameters['code'];
+        if ((token == null || token.isEmpty) && (u.fragment.isNotEmpty)) {
           try {
-            final frag = Uri.splitQueryString(uri.fragment);
-            token = frag['access_token'];
+            final frag = Uri.splitQueryString(u.fragment);
+            token = frag['access_token'] ?? frag['code'];
           } catch (e) {}
         }
         if (token != null && token.isNotEmpty) {
@@ -44,13 +47,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       }).catchError((e) {});
 
       // Also subscribe to runtime links (when app is resumed from background)
-      _linkSub = appLinks.uriLinkStream.listen((uri) {
+      _linkSub = appLinks.uriLinkStream.listen((Uri? uri) {
         if (uri == null) return;
-        String? token = uri.queryParameters['access_token'];
-        if ((token == null || token.isEmpty) && (uri.fragment.isNotEmpty)) {
+        final u = uri;
+        String? token =
+            u.queryParameters['access_token'] ?? u.queryParameters['code'];
+        if ((token == null || token.isEmpty) && (u.fragment.isNotEmpty)) {
           try {
-            final frag = Uri.splitQueryString(uri.fragment);
-            token = frag['access_token'];
+            final frag = Uri.splitQueryString(u.fragment);
+            token = frag['access_token'] ?? frag['code'];
           } catch (e) {}
         }
         if (token != null && token.isNotEmpty) {
@@ -99,11 +104,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     if (text.isEmpty) return;
                     try {
                       final uri = Uri.parse(text);
-                      String? token = uri.queryParameters['access_token'];
+                      String? token = uri.queryParameters['access_token'] ??
+                          uri.queryParameters['code'];
                       if ((token == null || token.isEmpty) &&
                           uri.fragment.isNotEmpty) {
                         final frag = Uri.splitQueryString(uri.fragment);
-                        token = frag['access_token'];
+                        token = frag['access_token'] ?? frag['code'];
                       }
                       if (token != null && token.isNotEmpty) {
                         setState(() => _resolvedToken = token);

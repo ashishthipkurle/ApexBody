@@ -25,17 +25,24 @@ dependencies:
   shared_preferences: ^2.3.2
   hive: ^2.2.3
   hive_flutter: ^1.1.0
+  open_file: ^3.2.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.11.0
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/ApexBody_logo.png" 
 
 flutter:
   uses-material-design: true
 
   assets:
-    - assets/apexbody_logo.png
+    - assets/ApexBody_logo.png
     - assets/ApexBody_circle.png
     - assets/ApexBody_dumbbell.png
     - assets/Dashboard1.png
@@ -45,3 +52,4 @@ flutter:
     - assets/Dashboard5.png
     - assets/Dashboard6.png
     - assets/Dashboard9.png
+

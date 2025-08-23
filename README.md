@@ -1,6 +1,15 @@
-# apexbody_testing
 
-A new Flutter project.
+# ApexBody
+
+This project is the ApexBody Flutter app. Below are quick steps to generate launcher icons from the bundled logo.
+
+Generate launcher icons (uses `assets/ApexBody_logo.png`):
+
+```bash
+flutter pub get; flutter pub run flutter_launcher_icons:main
+```
+
+If you prefer to set icons manually, replace the platform icon files under `android/app/src/main/res/`, `ios/Runner/Assets.xcassets/AppIcon.appiconset/`, and the Windows/macOS icon resources.
 
 ## Getting Started
 

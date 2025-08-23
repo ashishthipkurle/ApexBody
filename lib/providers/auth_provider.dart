@@ -168,12 +168,85 @@ class AuthProvider with ChangeNotifier {
       if (accessToken == null || accessToken.isEmpty) {
         return 'Missing recovery token.';
       }
+      // Supabase sometimes returns a short `code` (UUID) instead of a JWT.
+      // The patch endpoint requires a valid JWT. If we received a code,
+      // exchange it for an access_token using the token endpoint.
+      String tokenToUse = accessToken;
+      try {
+        final parts = accessToken.split('.');
+        final looksLikeJwt = parts.length == 3; // simple heuristic
+        if (!looksLikeJwt) {
+          // Prefer server-side exchange via Netlify function which uses the
+          // service_role key. This avoids 400 invalid_credentials when using
+          // the anon key from client-side.
+          final netlifyExchangeUrl =
+              'https://frabjous-granita-ba5b70.netlify.app/.netlify/functions/exchange';
+          bool exchanged = false;
+
+          try {
+            final resp = await http.post(Uri.parse(netlifyExchangeUrl),
+                headers: {'Content-Type': 'application/json'},
+                body: jsonEncode({'recovery_token': accessToken}));
+
+            if (resp.statusCode >= 200 && resp.statusCode < 300) {
+              try {
+                final Map<String, dynamic> body = jsonDecode(resp.body);
+                if (body.containsKey('access_token') &&
+                    body['access_token'] is String) {
+                  tokenToUse = body['access_token'];
+                  exchanged = true;
+                } else {
+                  // The function returned something unexpected; we'll fall back
+                  // to a direct exchange below.
+                  print(
+                      '[AuthProvider] Exchange function returned no access_token: ${resp.body}');
+                }
+              } catch (e) {
+                print(
+                    '[AuthProvider] Failed parsing exchange function response: $e');
+              }
+            } else {
+              print(
+                  '[AuthProvider] Exchange function failed: ${resp.statusCode} ${resp.body}');
+            }
+          } catch (e) {
+            print('[AuthProvider] Exchange function request failed: $e');
+          }
+
+          // If server-side exchange didn't yield a token, attempt the old
+          // direct exchange as a fallback (may fail with 400 invalid_credentials
+          // depending on your Supabase project settings).
+          if (!exchanged) {
+            final tokenUrl = '${SupabaseService().supabaseUrl}/auth/v1/token';
+            final exch = await http.post(Uri.parse(tokenUrl),
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  'apikey': SupabaseService().supabaseKey,
+                },
+                body:
+                    'grant_type=recovery&recovery_token=${Uri.encodeComponent(accessToken)}');
+            if (exch.statusCode >= 200 && exch.statusCode < 300) {
+              final Map<String, dynamic> body = jsonDecode(exch.body);
+              if (body.containsKey('access_token') &&
+                  body['access_token'] is String) {
+                tokenToUse = body['access_token'];
+              } else {
+                return 'Token exchange failed: unexpected response from Supabase token endpoint.';
+              }
+            } else {
+              return 'Token exchange failed: ${exch.statusCode} ${exch.body}';
+            }
+          }
+        }
+      } catch (e) {
+        return 'Failed to exchange recovery code: $e';
+      }
       // Use the Supabase REST endpoint to update the user's password using the
       // temporary access token passed in the reset link.
       final url = '${SupabaseService().supabaseUrl}/auth/v1/user';
       final resp = await http.patch(Uri.parse(url),
           headers: {
-            'Authorization': 'Bearer $accessToken',
+            'Authorization': 'Bearer $tokenToUse',
             'apikey': SupabaseService().supabaseKey,
             'Content-Type': 'application/json'
           },
@@ -222,10 +295,10 @@ class AuthProvider with ChangeNotifier {
 
       await _client.auth.resetPasswordForEmail(
         email,
-        // Use a hosted web fallback page that captures fragment tokens and
-        // redirects to the app scheme. This avoids token loss on some email
-        // clients which strip fragment (#) parts from deep links.
-        redirectTo: 'https://apexbodygym.com/password-reset',
+        // Use the Netlify-hosted fallback page so the token/code is captured
+        // and redirected to the app. Replace with your live Netlify URL.
+        redirectTo:
+            'https://frabjous-granita-ba5b70.netlify.app/password-reset',
       );
       return null;
     } on AuthException catch (e) {
