@@ -88,17 +88,21 @@ class _WorkoutEntriesPageState extends State<WorkoutEntriesPage> {
   @override
   Widget build(BuildContext context) {
     // calculate total calories if needed in future
+    const double appBarRadius = 8.0;
     return Stack(
       children: [
         Positioned.fill(
-          child: Image.asset(
-            'assets/Dashboard2.png',
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Container(
-              color: Colors.red,
-              alignment: Alignment.center,
-              child: const Text('Failed to load assets/Dashboard2.png',
-                  style: TextStyle(color: Colors.white)),
+          child: Transform.translate(
+            offset: Offset(0, -appBarRadius),
+            child: Image.asset(
+              'assets/Dashboard2.png',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: Color(0xFF0F172A),
+                alignment: Alignment.center,
+                child: const Text('Failed to load assets/Dashboard2.png',
+                    style: TextStyle(color: Colors.white)),
+              ),
             ),
           ),
         ),

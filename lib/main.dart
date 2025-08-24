@@ -30,6 +30,8 @@ class MyApp extends StatelessWidget {
   const MyApp({Key? key, this.initialUser}) : super(key: key);
   @override
   Widget build(BuildContext context) {
+    // Slightly larger corner radius so the bottom appears gently rounded
+    const double appBarRadius = 10;
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider(initialUser)),
@@ -40,17 +42,26 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFFFF4B4B)),
+          colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF0F172A)),
           scaffoldBackgroundColor: Colors.grey[50],
-          appBarTheme: const AppBarTheme(
-            backgroundColor: Color(0xFFFF4B4B),
+          appBarTheme: AppBarTheme(
+            // slightly taller toolbar (increased)
+            toolbarHeight: 80,
+            // rounded corners ~5% of screen width
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(appBarRadius),
+                bottomRight: Radius.circular(appBarRadius),
+              ),
+            ),
+            backgroundColor: const Color(0xFF0F172A),
             foregroundColor: Colors.white,
             elevation: 0,
             centerTitle: true,
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFFF4B4B),
+              backgroundColor: Color(0xFF0F172A),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),

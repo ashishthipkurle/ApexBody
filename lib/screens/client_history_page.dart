@@ -34,17 +34,21 @@ class _ClientHistoryPageState extends State<ClientHistoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    const double appBarRadius = 8.0;
     return Stack(
       children: [
         Positioned.fill(
-          child: Image.asset(
-            'assets/Dashboard6.png',
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Container(
-              color: Colors.red,
-              alignment: Alignment.center,
-              child: const Text('Failed to load assets/Dashboard6.png',
-                  style: TextStyle(color: Colors.white)),
+          child: Transform.translate(
+            offset: const Offset(0, -appBarRadius),
+            child: Image.asset(
+              'assets/Dashboard6.png',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: Color(0xFF0F172A),
+                alignment: Alignment.center,
+                child: const Text('Failed to load assets/Dashboard6.png',
+                    style: TextStyle(color: Colors.white)),
+              ),
             ),
           ),
         ),

@@ -26,6 +26,7 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   open_file: ^3.2.1
+  image_picker: ^1.0.7
 
 dev_dependencies:
   flutter_test:
@@ -36,7 +37,7 @@ dev_dependencies:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/ApexBody_logo.png" 
+  image_path: "assets/ApexBody_logo1.png"
 
 flutter:
   uses-material-design: true

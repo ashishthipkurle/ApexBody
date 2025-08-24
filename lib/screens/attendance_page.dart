@@ -61,7 +61,7 @@ class _AttendancePageState extends State<AttendancePage> {
     final query = _searchController.text.toLowerCase();
     setState(() {
       filteredClients = clients.where((client) {
-        return client.name.toLowerCase().contains(query) ||
+        return (client.name ?? '').toLowerCase().contains(query) ||
             (client.phone ?? '').toLowerCase().contains(query);
       }).toList();
     });
@@ -84,7 +84,8 @@ class _AttendancePageState extends State<AttendancePage> {
       builder: (_) {
         return CalendarForClient(
           clientId: client.id,
-          clientName: client.name.isNotEmpty ? client.name : client.email,
+          clientName:
+              client.name?.isNotEmpty == true ? client.name! : client.email,
         );
       },
     );
@@ -94,13 +95,17 @@ class _AttendancePageState extends State<AttendancePage> {
   Widget build(BuildContext context) {
     final dp = Provider.of<DataProvider>(context);
 
+    const double appBarRadius = 8.0; // match theme
     return Scaffold(
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset(
-              'assets/Dashboard9.png',
-              fit: BoxFit.cover,
+            child: Transform.translate(
+              offset: const Offset(0, -appBarRadius),
+              child: Image.asset(
+                'assets/Dashboard9.png',
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           if (loading)
@@ -143,15 +148,23 @@ class _AttendancePageState extends State<AttendancePage> {
                           child: ListTile(
                             onTap: () => _showCalendarForClient(client),
                             leading: CircleAvatar(
-                              child: Text(
-                                (client.name.isNotEmpty
-                                        ? client.name[0]
-                                        : client.email[0])
-                                    .toUpperCase(),
-                              ),
+                              backgroundImage:
+                                  (client.profilePictureUrl != null &&
+                                          client.profilePictureUrl!.isNotEmpty)
+                                      ? NetworkImage(client.profilePictureUrl!)
+                                      : null,
+                              child: (client.profilePictureUrl == null ||
+                                      client.profilePictureUrl!.isEmpty)
+                                  ? Text(
+                                      ((client.name?.isNotEmpty == true
+                                              ? client.name![0]
+                                              : client.email[0])
+                                          .toUpperCase()),
+                                    )
+                                  : null,
                             ),
-                            title: Text(client.name.isNotEmpty
-                                ? client.name
+                            title: Text(client.name?.isNotEmpty == true
+                                ? client.name!
                                 : client.email),
                             subtitle: GestureDetector(
                               onTap: () => _callNumber(client.phone ?? ""),
@@ -195,7 +208,7 @@ class _AttendancePageState extends State<AttendancePage> {
                                                 .showSnackBar(
                                               SnackBar(
                                                 content: Text(
-                                                  'Checked in ${client.name.isNotEmpty ? client.name : client.email}',
+                                                  'Checked in ${client.name?.isNotEmpty == true ? client.name! : client.email}',
                                                 ),
                                               ),
                                             );
@@ -232,7 +245,7 @@ class _AttendancePageState extends State<AttendancePage> {
                                                 .showSnackBar(
                                               SnackBar(
                                                 content: Text(
-                                                  'Checked out ${client.name.isNotEmpty ? client.name : client.email}',
+                                                  'Checked out ${client.name?.isNotEmpty == true ? client.name! : client.email}',
                                                 ),
                                               ),
                                             );

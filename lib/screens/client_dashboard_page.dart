@@ -131,7 +131,7 @@ class _ClientDashboardPageState extends State<ClientDashboardPage> {
     final user = provider.selectedClient;
     String name = '';
     if (user != null) {
-      name = user.name;
+      name = user.name ?? '';
     } else {
       final auth = Provider.of<AuthProvider>(context, listen: false);
       name = auth.user?.name ?? '';

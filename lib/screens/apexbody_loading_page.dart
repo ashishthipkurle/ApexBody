@@ -36,7 +36,7 @@ class _ApexBodyLoadingPageState extends State<ApexBodyLoadingPage>
           children: [
             // App logo at the top
             Image.asset(
-              'assets/apexbody_logo.png',
+              'assets/ApexBody_logo.png',
               height: 300,
             ),
             const SizedBox(height: 16),

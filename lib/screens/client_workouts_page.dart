@@ -12,19 +12,23 @@ class ClientWorkoutsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
     final topPadding = kToolbarHeight + MediaQuery.of(context).padding.top;
+    const double appBarRadius = 8.0;
     return Scaffold(
       body: Stack(
         children: [
           // background image fills the body so it appears directly under the AppBar
           Positioned.fill(
-            child: Image.asset(
-              'assets/Dashboard5.png',
-              fit: BoxFit.cover,
-              errorBuilder: (ctx, err, st) => Container(
-                color: Colors.redAccent,
-                alignment: Alignment.center,
-                child: const Text('Failed to load assets/Dashboard5.png',
-                    style: TextStyle(color: Colors.white)),
+            child: Transform.translate(
+              offset: Offset(0, -appBarRadius),
+              child: Image.asset(
+                'assets/Dashboard5.png',
+                fit: BoxFit.cover,
+                errorBuilder: (ctx, err, st) => Container(
+                  color: Color(0xFF0F172A),
+                  alignment: Alignment.center,
+                  child: const Text('Failed to load assets/Dashboard5.png',
+                      style: TextStyle(color: Colors.white)),
+                ),
               ),
             ),
           ),
@@ -75,18 +79,22 @@ class ClientWorkoutView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dp = Provider.of<DataProvider>(context);
+    const double appBarRadius = 8.0;
     return Stack(
       children: [
         // background image
         Positioned.fill(
-          child: Image.asset(
-            'assets/Dashboard1.png',
-            fit: BoxFit.cover,
-            errorBuilder: (ctx, err, st) => Container(
-              color: Colors.redAccent,
-              alignment: Alignment.center,
-              child: const Text('Failed to load assets/Dashboard1.png',
-                  style: TextStyle(color: Colors.white)),
+          child: Transform.translate(
+            offset: Offset(0, -appBarRadius),
+            child: Image.asset(
+              'assets/Dashboard1.png',
+              fit: BoxFit.cover,
+              errorBuilder: (ctx, err, st) => Container(
+                color: Color(0xFF0F172A),
+                alignment: Alignment.center,
+                child: const Text('Failed to load assets/Dashboard1.png',
+                    style: TextStyle(color: Colors.white)),
+              ),
             ),
           ),
         ),

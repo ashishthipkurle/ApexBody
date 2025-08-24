@@ -162,6 +162,7 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
   Widget build(BuildContext context) {
     final filtered = _filtered;
     // Selection is now based on filtered (deduped) list
+    const double appBarRadius = 8.0;
     return Scaffold(
       extendBodyBehindAppBar: true,
       extendBody: true,
@@ -183,14 +184,17 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset(
-              'assets/Dashboard2.png',
-              fit: BoxFit.cover,
-              errorBuilder: (ctx, err, st) => Container(
-                color: Colors.redAccent,
-                alignment: Alignment.center,
-                child: const Text('Failed to load assets/Dashboard2.png',
-                    style: TextStyle(color: Colors.white)),
+            child: Transform.translate(
+              offset: Offset(0, -appBarRadius),
+              child: Image.asset(
+                'assets/Dashboard2.png',
+                fit: BoxFit.cover,
+                errorBuilder: (ctx, err, st) => Container(
+                  color: Color(0xFF0F172A),
+                  alignment: Alignment.center,
+                  child: const Text('Failed to load assets/Dashboard2.png',
+                      style: TextStyle(color: Colors.white)),
+                ),
               ),
             ),
           ),

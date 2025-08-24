@@ -33,7 +33,6 @@ class _ClientPanelState extends State<ClientPanel> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
@@ -42,7 +41,8 @@ class _ClientPanelState extends State<ClientPanel> {
     final pages = [
       const ClientDashboardPage(),
       const ClientWorkoutsPage(),
-      ClientHistoryPage(clientId: auth.user!.id, clientName: auth.user!.name),
+      ClientHistoryPage(
+          clientId: auth.user!.id, clientName: auth.user?.name ?? ''),
     ];
 
     return WillPopScope(
@@ -58,6 +58,9 @@ class _ClientPanelState extends State<ClientPanel> {
         key: _scaffoldKey,
         appBar: AppBar(
           leadingWidth: 112,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.zero, // Removes rounded edges
+          ),
           // Single shared AppBar for client area
           leading: Row(
             mainAxisSize: MainAxisSize.min,
@@ -76,14 +79,21 @@ class _ClientPanelState extends State<ClientPanel> {
             children: [
               DrawerHeader(
                 decoration: const BoxDecoration(
-                  color: const Color(0xFFFF4B4B),
+                  color: const Color(0xFF0F172A),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.account_circle,
-                        size: 48, color: Colors.white),
-                    const SizedBox(height: 8),
+          CircleAvatar(
+            radius: 24,
+            backgroundImage: (auth.user?.profilePictureUrl != null && auth.user!.profilePictureUrl!.isNotEmpty)
+              ? NetworkImage(auth.user!.profilePictureUrl!)
+              : null,
+            child: (auth.user?.profilePictureUrl == null || auth.user!.profilePictureUrl!.isEmpty)
+              ? const Icon(Icons.account_circle, size: 48, color: Colors.white)
+              : null,
+          ),
+          const SizedBox(height: 8),
                     Text(auth.user?.name ?? '',
                         style:
                             const TextStyle(color: Colors.white, fontSize: 18)),
@@ -132,7 +142,7 @@ class _ClientPanelState extends State<ClientPanel> {
         body: pages[_selectedIndex],
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _selectedIndex,
-          selectedItemColor: Color(0xFFFF4B4B),
+          selectedItemColor: Color(0xFF0F172A),
           unselectedItemColor: Colors.grey,
           onTap: (index) {
             setState(() {
@@ -159,5 +169,3 @@ class _ClientPanelState extends State<ClientPanel> {
     );
   }
 }
-
-// replaced by a state method that can access context

@@ -242,7 +242,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   InputDecoration _decoration(String label) => InputDecoration(
         hintText: label,
-        hintStyle: const TextStyle(color: Colors.red),
+        hintStyle: const TextStyle(color: Color(0xFF0F172A)),
         filled: true,
         fillColor: Colors.grey.shade200,
         contentPadding:
@@ -272,7 +272,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: Colors.red))),
+                            color: Color(0xFF0F172A)))),
                 const SizedBox(height: 20),
 
                 // Personal fields
@@ -339,7 +339,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.red)),
+                        color: Color(0xFF0F172A))),
                 const SizedBox(height: 8),
                 TextFormField(
                     controller: _emergencyNameCtrl,
@@ -365,7 +365,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.red)),
+                        color: Color(0xFF0F172A))),
                 const SizedBox(height: 8),
                 Row(children: [
                   Expanded(
@@ -390,21 +390,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 12),
                 CheckboxListTile(
                     title: const Text('Existing Medical Condition',
-                        style: TextStyle(color: Colors.red)),
+                        style: TextStyle(color: Color(0xFF0F172A))),
                     value: _hasMedicalCondition,
                     onChanged: (v) =>
                         setState(() => _hasMedicalCondition = v ?? false),
                     controlAffinity: ListTileControlAffinity.leading),
                 CheckboxListTile(
                     title: const Text('Taking Medication',
-                        style: TextStyle(color: Colors.red)),
+                        style: TextStyle(color: Color(0xFF0F172A))),
                     value: _takingMedication,
                     onChanged: (v) =>
                         setState(() => _takingMedication = v ?? false),
                     controlAffinity: ListTileControlAffinity.leading),
                 CheckboxListTile(
                     title: const Text('Surgeries / Injuries in past 6 months',
-                        style: TextStyle(color: Colors.red)),
+                        style: TextStyle(color: Color(0xFF0F172A))),
                     value: _hadSurgeries,
                     onChanged: (v) =>
                         setState(() => _hadSurgeries = v ?? false),
@@ -415,7 +415,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.red)),
+                        color: Color(0xFF0F172A))),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                     value: _selectedMembershipType,
@@ -450,14 +450,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 12),
                 CheckboxListTile(
                     title: const Text('Trainer Required',
-                        style: TextStyle(color: Colors.red)),
+                        style: TextStyle(color: Color(0xFF0F172A))),
                     value: _trainerRequired,
                     onChanged: (v) =>
                         setState(() => _trainerRequired = v ?? false),
                     controlAffinity: ListTileControlAffinity.leading),
                 CheckboxListTile(
                     title: const Text('Physiotherapy Required',
-                        style: TextStyle(color: Colors.red)),
+                        style: TextStyle(color: Color(0xFF0F172A))),
                     value: _physioRequired,
                     onChanged: (v) =>
                         setState(() => _physioRequired = v ?? false),
@@ -499,7 +499,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     : ElevatedButton(
                         onPressed: _loading ? null : _submit,
                         style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
+                            backgroundColor: Color(0xFF0F172A),
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 60, vertical: 14),
                             shape: RoundedRectangleBorder(

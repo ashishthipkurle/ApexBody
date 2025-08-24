@@ -45,7 +45,7 @@ class _AllClientsHistoryPageState extends State<AllClientsHistoryPage> {
     final query = _searchController.text.toLowerCase();
     setState(() {
       filteredClients = clients.where((client) {
-        return client.name.toLowerCase().contains(query) ||
+        return (client.name ?? '').toLowerCase().contains(query) ||
             client.email.toLowerCase().contains(query);
       }).toList();
     });
@@ -53,14 +53,20 @@ class _AllClientsHistoryPageState extends State<AllClientsHistoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    const double appBarRadius = 8.0;
     return Stack(
       children: [
         // Background image
-        Container(
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/Dashboard4.png'),
-              fit: BoxFit.cover,
+        Positioned.fill(
+          child: Transform.translate(
+            offset: Offset(0, -appBarRadius),
+            child: Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/Dashboard4.png'),
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
           ),
         ),
@@ -117,7 +123,7 @@ class _AllClientsHistoryPageState extends State<AllClientsHistoryPage> {
                               final client = filteredClients[i];
                               final reports = clientReports[client.id] ?? [];
                               return ExpansionTile(
-                                title: Text(client.name,
+                                title: Text(client.name ?? '',
                                     style:
                                         const TextStyle(color: Colors.white)),
                                 subtitle: Text(client.email,
@@ -147,7 +153,8 @@ class _AllClientsHistoryPageState extends State<AllClientsHistoryPage> {
                                                       style: TextStyle(
                                                           fontWeight:
                                                               FontWeight.bold)),
-                                                  Text('Name: ${client.name}'),
+                                                  Text(
+                                                      'Name: ${client.name ?? ''}'),
                                                   Text(
                                                       'Email: ${client.email}'),
                                                   Text(

@@ -42,7 +42,7 @@ class _ResendConfirmationScreenState extends State<ResendConfirmationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final primary = const Color(0xFFFF4B4B);
+    final primary = const Color(0xFF0F172A);
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(

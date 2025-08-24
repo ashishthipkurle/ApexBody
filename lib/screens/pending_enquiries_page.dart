@@ -34,7 +34,7 @@ class _PendingEnquiriesPageState extends State<PendingEnquiriesPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pending Enquiries'),
-        backgroundColor: Color(0xFFFF4B4B),
+        backgroundColor: Color(0xFF0F172A),
       ),
       body: loading
           ? const Center(
@@ -50,7 +50,7 @@ class _PendingEnquiriesPageState extends State<PendingEnquiriesPage> {
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       child: ListTile(
                         leading: const Icon(Icons.help_outline,
-                            color: Color(0xFFFF4B4B)),
+                            color: Color(0xFF0F172A)),
                         title: Text(enquiry['subject'] ?? 'No subject'),
                         subtitle: Text(enquiry['message'] ?? ''),
                         trailing: Text(enquiry['status'] ?? ''),

@@ -50,6 +50,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
       child: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.zero,
+          ),
           leadingWidth: 112,
           // Left side: back arrow then menu
           leading: Row(
@@ -101,14 +104,21 @@ class _AdminDashboardState extends State<AdminDashboard> {
             children: [
               DrawerHeader(
                 decoration: const BoxDecoration(
-                  color: Color(0xFFFF4B4B),
+                  color: Color(0xFF0F172A),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.admin_panel_settings,
-                        size: 48, color: Colors.white),
-                    const SizedBox(height: 8),
+          CircleAvatar(
+            radius: 24,
+            backgroundImage: (auth.user?.profilePictureUrl != null && auth.user!.profilePictureUrl!.isNotEmpty)
+              ? NetworkImage(auth.user!.profilePictureUrl!)
+              : null,
+            child: (auth.user?.profilePictureUrl == null || auth.user!.profilePictureUrl!.isEmpty)
+              ? const Icon(Icons.admin_panel_settings, size: 48, color: Colors.white)
+              : null,
+          ),
+          const SizedBox(height: 8),
                     Text(auth.user?.name ?? 'Admin',
                         style:
                             const TextStyle(color: Colors.white, fontSize: 18)),
@@ -231,7 +241,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         body: _pages[_selectedIndex],
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _selectedIndex,
-          selectedItemColor: Color(0xFFFF4B4B),
+          selectedItemColor: Color(0xFF0F172A),
           unselectedItemColor: Colors.grey,
           onTap: (index) {
             setState(() {

@@ -16,7 +16,7 @@ class ApexBodyHomePage extends StatelessWidget {
             // Logo centered like loading page
             Center(
               child: Image.asset(
-                'assets/apexbody_logo.png', // replace with your logo asset
+                'assets/ApexBody_logo.png', // replace with your logo asset
                 height: 300,
               ),
             ),
@@ -39,7 +39,7 @@ class ApexBodyHomePage extends StatelessWidget {
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
+                          backgroundColor: Color(0xFF0F172A),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -61,7 +61,7 @@ class ApexBodyHomePage extends StatelessWidget {
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
+                          backgroundColor: Color(0xFF0F172A),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),

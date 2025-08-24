@@ -155,7 +155,7 @@ class _BodyAnalysisFormState extends State<BodyAnalysisForm> {
                           items: clients
                               .map((c) => DropdownMenuItem(
                                     value: c,
-                                    child: Text(c.name),
+                                    child: Text(c.name ?? ''),
                                   ))
                               .toList(),
                           onChanged: (c) => setState(() => selectedClient = c),
@@ -165,7 +165,7 @@ class _BodyAnalysisFormState extends State<BodyAnalysisForm> {
                             border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8)),
                             filled: true,
-                           // fillColor: Colors.white.withOpacity(0.6),
+                            // fillColor: Colors.white.withOpacity(0.6),
                             contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 14),
                           ),

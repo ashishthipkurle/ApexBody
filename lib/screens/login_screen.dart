@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const Text(
                         "Login ID",
                         style: TextStyle(
-                          color: Colors.red,
+                          color: Color(0xFF0F172A),
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -75,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const Text(
                         "Password",
                         style: TextStyle(
-                          color: Colors.red,
+                          color: Color(0xFF0F172A),
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -216,7 +216,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         }
                                       },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: Color(0xFF0F172A),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(15),
                                   ),
@@ -243,7 +243,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   );
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: Color(0xFF0F172A),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(15),
                                   ),
@@ -309,7 +309,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             },
                             child: const Text(
                               "Forgot Password ?",
-                              style: TextStyle(color: Colors.red),
+                              style: TextStyle(color: Color(0xFF0F172A)),
                             ),
                           ),
                         ],
@@ -326,7 +326,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                           child: const Text(
                             "Resend Confirmation email",
-                            style: TextStyle(color: Colors.red),
+                            style: TextStyle(color: Color(0xFF0F172A)),
                           ),
                         ),
                       )

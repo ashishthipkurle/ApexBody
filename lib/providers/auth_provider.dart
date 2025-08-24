@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../services/supabase_service.dart';
 import '../models/user_model.dart';
@@ -305,6 +306,148 @@ class AuthProvider with ChangeNotifier {
       return e.message;
     } catch (e) {
       return e.toString();
+    }
+  }
+
+  // Upload profile picture and update user profile
+  Future<String?> uploadProfilePicture(Uint8List imageBytes) async {
+    try {
+      // Verify authentication
+      final session = await _client.auth.currentSession;
+      if (session == null) return 'No active session found';
+      if (_user == null) return 'No authenticated user';
+
+      print('[Auth] User ID: ${_user!.id}');
+      print('[Auth] Session User ID: ${session.user.id}');
+      print('[Auth] Role: ${session.user.role}');
+
+      // Create filename in user's folder
+      final userId = session.user.id; // Use session user ID
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final fileName = 'profile_$timestamp.jpg'; // File in user's folder
+      final fullPath = '$userId/$fileName'; // Full path including user folder
+
+      print('[Storage] Attempting upload to: $fullPath');
+
+      // Step 1: Upload to storage
+      try {
+        final storageResponse = await _client.storage
+            .from('profile_pictures')
+            .uploadBinary(
+                fullPath, // Use full path
+                imageBytes,
+                fileOptions:
+                    const FileOptions(cacheControl: '3600', upsert: false));
+
+        if (storageResponse.isEmpty) {
+          print('[Storage] Upload failed: Empty response');
+          return 'Storage upload failed: Empty response';
+        }
+        print('[Storage] Upload successful');
+      } catch (e) {
+        print('[Storage] Upload error details: $e');
+        return 'Storage upload failed: $e';
+      }
+
+      // Step 2: Get public URL (use full path)
+      final imageUrl =
+          _client.storage.from('profile_pictures').getPublicUrl(fullPath);
+      print('[Storage] Generated public URL: $imageUrl');
+
+      // Verify URL is valid
+      try {
+        final uri = Uri.parse(imageUrl);
+        if (!uri.isAbsolute) {
+          print('[Storage] Invalid URL generated: $imageUrl');
+          return 'Invalid URL generated';
+        }
+      } catch (e) {
+        print('[Storage] URL parsing error: $e');
+        return 'URL generation failed';
+      }
+
+      // Step 3: Update user profile
+      List<Map<String, dynamic>> updateRes;
+      try {
+        updateRes = await _client
+            .from('users')
+            .update({
+              'profile_picture_url': imageUrl,
+            })
+            .eq('id', userId) // Use session user ID consistently
+            .select();
+
+        if (updateRes.isEmpty) {
+          print('[DB] Update failed: Empty response');
+          return 'Database update failed: No response';
+        }
+        print('[DB] Profile updated successfully');
+      } catch (e) {
+        print('[DB] Update error: $e');
+        return 'Database update failed: $e';
+      }
+
+      // Step 4: Update local state
+      try {
+        _user = AppUser.fromMap(updateRes[0]);
+        await LocalStorageService.saveUser(_user!);
+        notifyListeners();
+        print('[Local] State updated successfully');
+        return null;
+      } catch (e) {
+        print('[Local] State update error: $e');
+        return 'Local state update failed: $e';
+      }
+    } catch (e) {
+      print('[Error] Unexpected error: $e');
+      return 'Unexpected error: $e';
+    }
+  } // Delete profile picture
+
+  Future<String?> deleteProfilePicture() async {
+    try {
+      if (_user == null) return 'No authenticated user.';
+      if (_user!.profilePictureUrl == null) return null; // Nothing to delete
+
+      // Extract full path from URL (e.g., userId/profile_xxx.jpg)
+      final uri = Uri.parse(_user!.profilePictureUrl!);
+      // Supabase public URL format: https://<project>.supabase.co/storage/v1/object/public/<bucket>/<path>
+      // We need the <path> part after the bucket name
+      final segments = uri.pathSegments;
+      final bucketIndex = segments.indexOf('profile_pictures');
+      String? fullPath;
+      if (bucketIndex != -1 && bucketIndex + 1 < segments.length) {
+        fullPath = segments.sublist(bucketIndex + 1).join('/');
+      }
+      if (fullPath == null || fullPath.isEmpty) {
+        return 'Could not determine image path for deletion';
+      }
+
+      // Delete from storage using full path
+      await _client.storage.from('profile_pictures').remove([fullPath]);
+
+      // Update user profile to remove the URL
+      final updateRes = await _client
+          .from('users')
+          .update({'profile_picture_url': null})
+          .eq('id', _user!.id)
+          .select();
+
+      if (updateRes.isEmpty) {
+        return 'Failed to update profile after deleting image';
+      }
+
+      // Update local user object
+      final updatedProfile = Map<String, dynamic>.from(updateRes[0]);
+      _user = AppUser.fromMap(updatedProfile);
+
+      // Update local storage
+      await LocalStorageService.saveUser(_user!);
+
+      notifyListeners();
+      return null;
+    } catch (e) {
+      return 'Failed to delete profile picture: $e';
     }
   }
 

@@ -3,7 +3,7 @@ import 'package:apexbody/screens/workout_detail_page.dart';
 import 'package:apexbody/providers/data_provider.dart';
 import 'package:provider/provider.dart';
 import '../models/user_model.dart';
-import 'all_clients_history.dart';
+// ...existing code
 import 'package:apexbody/screens/client_history_page.dart';
 import '../widgets/loading_animation.dart';
 
@@ -46,7 +46,7 @@ class _ClientsWorkoutsPageState extends State<ClientsWorkoutsPage> {
     final query = _searchController.text.toLowerCase();
     setState(() {
       filteredClients = clients.where((client) {
-        return client.name.toLowerCase().contains(query) ||
+        return (client.name ?? '').toLowerCase().contains(query) ||
             (client.phone ?? '').toLowerCase().contains(query);
       }).toList();
     });
@@ -56,6 +56,7 @@ class _ClientsWorkoutsPageState extends State<ClientsWorkoutsPage> {
   Widget build(BuildContext context) {
     final dataProvider = Provider.of<DataProvider>(context, listen: false);
 
+    const double appBarRadius = 8.0;
     return Scaffold(
       body: isLoading
           ? const Center(
@@ -63,14 +64,18 @@ class _ClientsWorkoutsPageState extends State<ClientsWorkoutsPage> {
           : Stack(
               children: [
                 Positioned.fill(
-                  child: Image.asset(
-                    'assets/Dashboard5.png',
-                    fit: BoxFit.cover,
-                    errorBuilder: (ctx, err, st) => Container(
-                      color: Colors.redAccent,
-                      alignment: Alignment.center,
-                      child: const Text('Failed to load assets/Dashboard5.png',
-                          style: TextStyle(color: Colors.white)),
+                  child: Transform.translate(
+                    offset: Offset(0, -appBarRadius),
+                    child: Image.asset(
+                      'assets/Dashboard5.png',
+                      fit: BoxFit.cover,
+                      errorBuilder: (ctx, err, st) => Container(
+                        color: Color(0xFF0F172A),
+                        alignment: Alignment.center,
+                        child: const Text(
+                            'Failed to load assets/Dashboard5.png',
+                            style: TextStyle(color: Colors.white)),
+                      ),
                     ),
                   ),
                 ),
@@ -108,9 +113,10 @@ class _ClientsWorkoutsPageState extends State<ClientsWorkoutsPage> {
                                   child: Card(
                                     color: Colors.white.withOpacity(0.85),
                                     child: ListTile(
-                                      title: Text(client.name.isNotEmpty
-                                          ? client.name
-                                          : 'No Name'),
+                                      title: Text(
+                                          client.name?.isNotEmpty == true
+                                              ? client.name!
+                                              : 'No Name'),
                                       subtitle:
                                           Text((client.phone ?? 'No Phone')),
                                       trailing: Row(
@@ -127,7 +133,8 @@ class _ClientsWorkoutsPageState extends State<ClientsWorkoutsPage> {
                                                       ClientHistoryPage(
                                                           clientId: client.id,
                                                           clientName:
-                                                              client.name),
+                                                              client.name ??
+                                                                  ''),
                                                 ),
                                               );
                                             },
@@ -144,9 +151,11 @@ class _ClientsWorkoutsPageState extends State<ClientsWorkoutsPage> {
                                             builder: (context) =>
                                                 WorkoutDetailPage(
                                               clientId: client.id,
-                                              clientName: client.name.isNotEmpty
-                                                  ? client.name
-                                                  : 'No Name',
+                                              clientName:
+                                                  client.name?.isNotEmpty ==
+                                                          true
+                                                      ? client.name!
+                                                      : 'No Name',
                                             ),
                                           ),
                                         );
