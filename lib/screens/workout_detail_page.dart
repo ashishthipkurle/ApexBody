@@ -141,7 +141,7 @@ class _WorkoutDetailPageState extends State<WorkoutDetailPage> {
         Container(
           decoration: const BoxDecoration(
             image: DecorationImage(
-              image: AssetImage('assets/Dashboard2.png'),
+              image: AssetImage('assets/Dashboard22.png'),
               fit: BoxFit.cover,
             ),
           ),

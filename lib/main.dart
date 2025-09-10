@@ -10,12 +10,28 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'screens/splash_to_login.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'screens/about_page.dart';
+import 'models/weekly_goal.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseService().init();
   // Initialize Hive for local persistence
   await Hive.initFlutter();
+  // Register Hive adapters for weekly goals
+  if (!Hive.isAdapterRegistered(1)) {
+    Hive.registerAdapter(WeeklyGoalAdapter());
+  }
+  if (!Hive.isAdapterRegistered(2)) {
+    Hive.registerAdapter(MuscleTargetAdapter());
+  }
+  if (!Hive.isAdapterRegistered(3)) {
+    Hive.registerAdapter(DailyTargetAdapter());
+  }
+  if (!Hive.isAdapterRegistered(4)) {
+    Hive.registerAdapter(DailyTargetMapAdapter());
+  }
+  await Hive.openBox<WeeklyGoal>('weeklyGoals');
   final savedUser = await LocalStorageService.getUser();
   if (savedUser != null) {
     print('[main] Preloaded saved user: ${savedUser.id} (${savedUser.role})');
@@ -45,9 +61,7 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF0F172A)),
           scaffoldBackgroundColor: Colors.grey[50],
           appBarTheme: AppBarTheme(
-            // slightly taller toolbar (increased)
             toolbarHeight: 80,
-            // rounded corners ~5% of screen width
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(appBarRadius),
@@ -81,6 +95,9 @@ class MyApp extends StatelessWidget {
           }),
         ),
         home: DeepLinkShell(child: const SplashToLogin()),
+        routes: {
+          '/about': (context) => const AboutPage(),
+        },
       ),
     );
   }

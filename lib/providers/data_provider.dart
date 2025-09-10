@@ -1,10 +1,208 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
+import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 import '../utils/calorie_calc.dart';
 
 class DataProvider with ChangeNotifier {
+  /// Delete an exercise from the 'exercises' table by its id
+  Future<void> deleteExerciseById(String exerciseId) async {
+    try {
+      await _client.from('exercises').delete().eq('id', exerciseId);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error deleting exercise from database: $e');
+      rethrow;
+    }
+  }
+
+  // Simple UUID v4 validator (used to detect if an id looks like a DB UUID)
+  bool _looksLikeUuid(String? s) {
+    if (s == null) return false;
+    final rgx = RegExp(
+        r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$');
+    return rgx.hasMatch(s);
+  }
+
+  /// Atomically upsert (insert/update) multiple muscle-target rows for a weekly goal.
+  ///
+  /// `goalId` - the client_weekly_goals.id these targets belong to.
+  /// `updates` - list of maps where each map may contain:
+  ///   - 'id' (optional): existing muscle target id (uuid)
+  ///   - 'muscle_group' (required if id not provided)
+  ///   - 'daily_targets' (Map<String, dynamic>) - the JSONB payload to store
+  ///   - optional 'target_sets', 'target_reps', 'target_weight'
+  ///
+  /// The method will try to match updates without a valid UUID to existing
+  /// rows by (goal_id, muscle_group) to avoid duplicate inserts, then perform
+  /// a single upsert call which is executed server-side as one SQL statement.
+  Future<void> saveWeeklyGoalDailyTargetsBatch({
+    required String goalId,
+    required List<Map<String, dynamic>> updates,
+  }) async {
+    if (updates.isEmpty) return;
+
+    try {
+      // Fetch existing targets for this goal to map by muscle_group
+      final existingRes = await _client
+          .from('client_weekly_goal_muscle_targets')
+          .select()
+          .eq('goal_id', goalId);
+      final existingList = (existingRes as List)
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+      final existingByGroup = <String, Map<String, dynamic>>{};
+      for (final r in existingList) {
+        final group = (r['muscle_group'] ?? '').toString();
+        if (group.isNotEmpty) existingByGroup[group] = r;
+      }
+
+      final now = DateTime.now().toUtc().toIso8601String();
+      final payloads = <Map<String, dynamic>>[];
+
+      for (final u in updates) {
+        final p = <String, dynamic>{'goal_id': goalId, 'updated_at': now};
+
+        if (u.containsKey('muscle_group') && u['muscle_group'] != null) {
+          p['muscle_group'] = u['muscle_group'];
+        }
+
+        if (u.containsKey('daily_targets') && u['daily_targets'] != null) {
+          // assume client passes a Map for daily_targets
+          p['daily_targets'] = u['daily_targets'];
+        }
+
+        if (u.containsKey('target_sets')) p['target_sets'] = u['target_sets'];
+        if (u.containsKey('target_reps')) p['target_reps'] = u['target_reps'];
+        if (u.containsKey('target_weight'))
+          p['target_weight'] = u['target_weight'];
+
+        // If a valid UUID id is supplied, use it so upsert updates that row
+        final suppliedId = u['id']?.toString();
+        if (_looksLikeUuid(suppliedId)) {
+          p['id'] = suppliedId;
+        } else {
+          // try to find an existing target by muscle_group to update instead of inserting
+          final group = p['muscle_group']?.toString() ?? '';
+          if (group.isNotEmpty && existingByGroup.containsKey(group)) {
+            p['id'] = existingByGroup[group]!['id'];
+          } else {
+            // new row: set created_at
+            p['created_at'] = now;
+          }
+        }
+
+        payloads.add(p);
+      }
+
+      if (payloads.isEmpty) return;
+
+      // Use upsert to perform a single statement that inserts/updates rows atomically
+      await _client.from('client_weekly_goal_muscle_targets').upsert(payloads);
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Error saving weekly goal daily targets batch: $e');
+    }
+  }
+
+  /// Mark a set as selected for the client (only one per workout)
+  Future<void> selectExerciseSet(String workoutId, String setId) async {
+    // Unselect all sets for this workout
+    await _client
+        .from('exercise_sets')
+        .update({'is_selected': false}).eq('workout_id', workoutId);
+    // Select the chosen set
+    await _client
+        .from('exercise_sets')
+        .update({'is_selected': true}).eq('id', setId);
+    notifyListeners();
+  }
+
+  /// Delete an exercise set by setId
+  Future<void> deleteExerciseSet(String setId) async {
+    await _client.from('exercise_sets').delete().eq('id', setId);
+    notifyListeners();
+  }
+
+  /// Fetch all exercise sets for a workout
+  Future<List<Map<String, dynamic>>> fetchExerciseSets(String workoutId) async {
+    final res = await _client
+        .from('exercise_sets')
+        .select()
+        .eq('workout_id', workoutId)
+        .order('created_at', ascending: true);
+    return (res as List).map((e) => Map<String, dynamic>.from(e)).toList();
+  }
+
+  /// Create a new exercise set for a workout
+  Future<void> createExerciseSet(String workoutId, String setName) async {
+    await _client.from('exercise_sets').insert({
+      'workout_id': workoutId,
+      'name': setName,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    notifyListeners();
+  }
+
+  /// Add a custom exercise and workout entry
+  Future<void> addCustomExerciseToWorkout({
+    required String workoutId,
+    required String clientId,
+    required String muscleGroup,
+    required String exerciseName,
+    required int sets,
+    required int reps,
+    required double weight,
+    required double duration,
+    String? setId,
+  }) async {
+    try {
+      final exercisePayload = {
+        'name': exerciseName,
+        'muscle_group': muscleGroup,
+        'type': 'Normal',
+        'met_value': 6.0,
+        'default_duration_minutes': duration.toInt(),
+      };
+      debugPrint('Custom exercise payload: $exercisePayload');
+      final exerciseRes = await _client
+          .from('exercises')
+          .insert(exercisePayload)
+          .select()
+          .maybeSingle();
+      debugPrint('Custom exercise response: $exerciseRes');
+      final exerciseId = exerciseRes != null ? exerciseRes['id'] : null;
+      final calories = (sets * reps * weight * 0.1); // Example factor
+      final entryPayload = {
+        'workout_id': workoutId,
+        'client_id': clientId,
+        'exercise_id': exerciseId,
+        'exercise_name': exerciseName,
+        'muscle_group': muscleGroup,
+        'sets': sets,
+        'reps': reps,
+        'weight': weight,
+        'duration_minutes': duration.toInt(),
+        'calories': calories,
+        'met_value': 6.0,
+        'date': DateTime.now().toIso8601String(),
+        if (setId != null) 'set_id': setId,
+      };
+      debugPrint('Workout entry payload: $entryPayload');
+      final entryRes = await _client
+          .from('workout_entries')
+          .insert(entryPayload)
+          .select()
+          .maybeSingle();
+      debugPrint('Workout entry response: $entryRes');
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error adding custom exercise: $e');
+    }
+  }
+
   // Cached gym status so UI can react to changes via Provider
   bool _gymOpen = true;
   bool get gymOpen => _gymOpen;
@@ -104,6 +302,17 @@ class DataProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Delete a single enquiry by id
+  Future<void> deleteEnquiry(String enquiryId) async {
+    try {
+      await _client.from('enquiries').delete().eq('id', enquiryId);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error deleting enquiry $enquiryId: $e');
+      rethrow;
+    }
+  }
+
   /// Delete a workout and all its entries
   Future<void> deleteWorkout(String workoutId) async {
     await _client.from('workout_entries').delete().eq('workout_id', workoutId);
@@ -123,37 +332,78 @@ class DataProvider with ChangeNotifier {
     int? sets,
     int? reps,
     double? durationMinutes,
+    double? distance,
+    double? speed,
+    double? weight,
+    double? caloriesOverride,
   }) async {
     final updateData = <String, dynamic>{};
     if (sets != null) updateData['sets'] = sets;
     if (reps != null) updateData['reps'] = reps;
     if (durationMinutes != null)
       updateData['duration_minutes'] = durationMinutes;
-
-    // Optionally, recalculate calories if duration is changed
-    if (durationMinutes != null) {
-      final entry = await _client
+    if (distance != null) updateData['distance'] = distance;
+    if (speed != null) updateData['speed'] = speed;
+    if (weight != null) updateData['weight'] = weight;
+    if (caloriesOverride != null) {
+      updateData['calories'] = caloriesOverride;
+    }
+    // Try to recompute calories based on updated values (or existing entry values)
+    try {
+      final existing = await _client
           .from('workout_entries')
           .select()
           .eq('id', entryId)
           .maybeSingle();
-      if (entry != null &&
-          entry['met_value'] != null &&
-          entry['client_id'] != null) {
-        final client = await _client
-            .from('users')
-            .select()
-            .eq('id', entry['client_id'])
-            .maybeSingle();
-        final weightKg = client != null && client['weight'] != null
-            ? (client['weight'] as num).toDouble()
-            : 70.0;
-        final metValue = (entry['met_value'] as num).toDouble();
-        updateData['calories'] = caloriesFromMet(
-            met: metValue,
-            weightKg: weightKg,
-            durationMinutes: durationMinutes);
+
+      double? newCalories;
+      if (existing != null) {
+        final finalSets = sets ?? (existing['sets'] as num?)?.toInt();
+        final finalReps = reps ?? (existing['reps'] as num?)?.toInt();
+        final finalDuration = durationMinutes ??
+            (existing['duration_minutes'] is num
+                ? (existing['duration_minutes'] as num).toDouble()
+                : null);
+        final finalWeight = weight ??
+            (existing['weight'] is num
+                ? (existing['weight'] as num).toDouble()
+                : null);
+        final finalMet = (existing['met_value'] is num)
+            ? (existing['met_value'] as num).toDouble()
+            : null;
+
+        // Attempt MET-based calculation if possible (requires client body weight)
+        if (finalMet != null && finalDuration != null) {
+          final clientId = existing['client_id']?.toString();
+          if (clientId != null) {
+            final clientData = await _client
+                .from('users')
+                .select()
+                .eq('id', clientId)
+                .maybeSingle();
+            if (clientData != null && clientData['weight'] != null) {
+              final clientWeightKg = (clientData['weight'] as num).toDouble();
+              newCalories = caloriesFromMet(
+                  met: finalMet,
+                  weightKg: clientWeightKg,
+                  durationMinutes: finalDuration);
+            }
+          }
+        }
+
+        // Fallback: simple heuristic based on sets * reps * lifted weight
+        if (newCalories == null &&
+            finalSets != null &&
+            finalReps != null &&
+            finalWeight != null) {
+          newCalories = finalSets * finalReps * finalWeight * 0.1;
+        }
       }
+
+      if (newCalories != null && caloriesOverride == null)
+        updateData['calories'] = newCalories;
+    } catch (e) {
+      // If something goes wrong computing calories, proceed without updating calories
     }
 
     await _client.from('workout_entries').update(updateData).eq('id', entryId);
@@ -575,6 +825,10 @@ class DataProvider with ChangeNotifier {
     required int sets,
     required int reps,
     required List<Map<String, dynamic>> exercises,
+    double? distance,
+    double? speed,
+    double? weight,
+    String? setId,
   }) async {
     try {
       for (final ex in exercises) {
@@ -630,6 +884,10 @@ class DataProvider with ChangeNotifier {
           'met_value': metValue,
           'calories': calories,
           'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
+          'distance': distance,
+          'speed': speed,
+          'weight': weight,
+          if (setId != null) 'set_id': setId,
         };
 
         await _client.from('workout_entries').insert(insertData);
@@ -717,6 +975,244 @@ class DataProvider with ChangeNotifier {
   Future<void> saveBodyAnalysisReport(Map<String, dynamic> data) async {
     await _client.from('body_analysis_reports').insert(data);
     notifyListeners();
+  }
+
+  // ====== WEEKLY GOALS (Client) ======
+
+  /// Fetch weekly goals for a client (includes basic fields)
+  Future<List<Map<String, dynamic>>> fetchWeeklyGoalsForClient(
+      String clientId) async {
+    final res = await _client
+        .from('client_weekly_goals')
+        .select()
+        .eq('client_id', clientId)
+        .order('week_start', ascending: false);
+    return List<Map<String, dynamic>>.from(res as List);
+  }
+
+  /// Fetch muscle targets for a given goal id
+  Future<List<Map<String, dynamic>>> fetchWeeklyGoalMuscleTargets(
+      String goalId) async {
+    final res = await _client
+        .from('client_weekly_goal_muscle_targets')
+        .select()
+        .eq('goal_id', goalId);
+    return List<Map<String, dynamic>>.from(res as List);
+  }
+
+  /// Convert a local bracketed ID to a UUID.
+  /// If the input is already a UUID, returns it unchanged.
+  /// Otherwise generates a new UUID that remains consistent for the same input.
+  String _convertToUuid(String? localId) {
+    if (localId == null) return const Uuid().v4();
+
+    // If it's already a UUID, return it
+    // Accept any valid UUID version (1-5). Keep server-generated UUIDs unchanged.
+    final uuidPattern = RegExp(
+        r'^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$');
+    if (uuidPattern.hasMatch(localId.toLowerCase())) {
+      return localId;
+    }
+
+    // Extract the unique part from bracketed ID
+    final bracketPattern = RegExp(r'\[#([0-9a-f]+)\]');
+    final match = bracketPattern.firstMatch(localId);
+    final uniquePart =
+        match?.group(1) ?? localId.replaceAll(RegExp(r'[^\w]'), '');
+
+    // Use the unique part to generate a deterministic UUID
+    final nameSpace = const Uuid().v5(Uuid.NAMESPACE_URL, 'apexbody.app');
+    return const Uuid().v5(nameSpace, uniquePart);
+  }
+
+  /// Create or update a weekly goal with muscle targets.
+  /// If `id` is null a new goal is created and its id returned.
+  Future<String?> saveWeeklyGoal({
+    String? id,
+    required String clientId,
+    required DateTime weekStart,
+    double? targetWeight,
+    double? targetCalories,
+    String? notes,
+    List<Map<String, dynamic>>? muscleTargets,
+  }) async {
+    final payload = {
+      'client_id': clientId,
+      'week_start': DateFormat('yyyy-MM-dd').format(weekStart),
+      if (targetWeight != null) 'target_weight': targetWeight,
+      if (targetCalories != null) 'target_calories': targetCalories,
+      if (notes != null) 'notes': notes,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+      // created_at will be set on insert but not on update
+    };
+
+    // First try to find if a goal exists for this week
+    try {
+      final existing = await _client
+          .from('client_weekly_goals')
+          .select()
+          .eq('client_id', clientId)
+          .eq('week_start', DateFormat('yyyy-MM-dd').format(weekStart))
+          .maybeSingle();
+
+      String? goalId;
+
+      if (existing != null) {
+        // Update existing goal
+        final res = await _client
+            .from('client_weekly_goals')
+            .update(payload)
+            .eq('id', existing['id'])
+            .select()
+            .maybeSingle();
+        goalId = res != null ? res['id'].toString() : existing['id'].toString();
+      } else {
+        // Insert new goal
+        final insertPayload = Map<String, dynamic>.from(payload);
+        if (id != null) insertPayload['id'] = _convertToUuid(id);
+        final res = await _client
+            .from('client_weekly_goals')
+            .insert(insertPayload)
+            .select()
+            .maybeSingle();
+        goalId = res != null ? res['id'].toString() : null;
+      }
+
+      if (goalId != null && muscleTargets != null) {
+        // Remove existing muscle targets for this goal then insert new ones
+        try {
+          debugPrint(
+              'WEEKLY_SAVE_PROVIDER: deleting muscle targets for goalId=$goalId');
+        } catch (_) {}
+        await _client
+            .from('client_weekly_goal_muscle_targets')
+            .delete()
+            .eq('goal_id', goalId);
+
+        final inserts = muscleTargets
+            .map((m) => {
+                  'id': _convertToUuid(m['id']?.toString()),
+                  'goal_id': goalId,
+                  'muscle_group': m['muscle_group'],
+                  'target_sets': m['target_sets'],
+                  'target_reps': m['target_reps'],
+                  if (m['daily_targets'] != null)
+                    'daily_targets': m['daily_targets'],
+                  if (m['target_weight'] != null)
+                    'target_weight': m['target_weight'],
+                  'created_at': DateTime.now().toUtc().toIso8601String(),
+                  'updated_at': DateTime.now().toUtc().toIso8601String(),
+                })
+            .toList();
+
+        try {
+          debugPrint(
+              'WEEKLY_SAVE_PROVIDER: inserting ${inserts.length} muscle targets for goalId=$goalId payload=${jsonEncode(inserts)}');
+        } catch (_) {}
+
+        if (inserts.isNotEmpty) {
+          await _client
+              .from('client_weekly_goal_muscle_targets')
+              .insert(inserts);
+        }
+      }
+
+      notifyListeners();
+      return goalId;
+    } catch (e) {
+      debugPrint('Error saving weekly goal: $e');
+      rethrow;
+    }
+  }
+
+  /// Delete a weekly goal and its muscle targets
+  Future<void> deleteWeeklyGoal(String goalId) async {
+    // If the provided id already looks like a UUID, use it directly to avoid
+    // remapping server-generated IDs into a deterministic different UUID.
+    final uuid = _looksLikeUuid(goalId) ? goalId : _convertToUuid(goalId);
+    try {
+      try {
+        debugPrint(
+            'WEEKLY_DELETE_PROVIDER: requested delete goalId=$goalId resolvedUuid=$uuid');
+      } catch (_) {}
+
+      // Diagnostic: count existing muscle targets and goals that match before delete
+      try {
+        final existingMT = await _client
+            .from('client_weekly_goal_muscle_targets')
+            .select()
+            .eq('goal_id', uuid);
+        final mtCount = (existingMT as List).length;
+        debugPrint(
+            'WEEKLY_DELETE_PROVIDER: found $mtCount muscle targets for goalId=$uuid');
+      } catch (_) {}
+
+      try {
+        final existingGoals =
+            await _client.from('client_weekly_goals').select().eq('id', uuid);
+        final goalCount = (existingGoals as List).length;
+        debugPrint(
+            'WEEKLY_DELETE_PROVIDER: existing goals matching id=$uuid: $goalCount');
+      } catch (_) {}
+
+      // Delete all related muscle targets first
+      await _client
+          .from('client_weekly_goal_muscle_targets')
+          .delete()
+          .eq('goal_id', uuid);
+
+      // Then delete the goal itself
+      await _client.from('client_weekly_goals').delete().eq('id', uuid);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error deleting goal $goalId (UUID: $uuid): $e');
+      rethrow;
+    }
+  }
+
+  /// Delete multiple weekly goals and their muscle targets at once
+  Future<void> deleteMultipleWeeklyGoals(List<String> goalIds) async {
+    if (goalIds.isEmpty) return;
+
+    // Convert or preserve IDs: if already a UUID, keep it; otherwise convert
+    final uuids = goalIds
+        .map((id) => _looksLikeUuid(id) ? id : _convertToUuid(id))
+        .toList();
+
+    try {
+      // Diagnostic: log counts per goal before deletion
+      try {
+        for (final uuid in uuids) {
+          try {
+            final existingMT = await _client
+                .from('client_weekly_goal_muscle_targets')
+                .select()
+                .eq('goal_id', uuid);
+            final mtCount = (existingMT as List).length;
+            debugPrint(
+                'WEEKLY_DELETE_PROVIDER: before delete goalId=$uuid muscleTargets=$mtCount');
+          } catch (_) {}
+        }
+      } catch (_) {}
+
+      // Delete all related muscle targets first for each goal
+      for (final uuid in uuids) {
+        await _client
+            .from('client_weekly_goal_muscle_targets')
+            .delete()
+            .eq('goal_id', uuid);
+      }
+
+      // Then delete all the goals
+      for (final uuid in uuids) {
+        await _client.from('client_weekly_goals').delete().eq('id', uuid);
+      }
+
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error deleting multiple goals $goalIds: $e');
+      rethrow;
+    }
   }
 
   /// Update client's weight and height

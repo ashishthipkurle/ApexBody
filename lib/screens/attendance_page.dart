@@ -68,12 +68,28 @@ class _AttendancePageState extends State<AttendancePage> {
   }
 
   Future<void> _callNumber(String phone) async {
-    final uri = Uri.parse('tel:$phone');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
+    // Remove spaces and validate phone number
+    final cleaned = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (cleaned.isEmpty || cleaned.length < 7) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Cannot place call')));
+          .showSnackBar(const SnackBar(content: Text('Invalid phone number')));
+      return;
+    }
+    final uri = Uri(scheme: 'tel', path: cleaned);
+    debugPrint('Attempting to call: $cleaned');
+    debugPrint('URI: $uri');
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        // Fallback: try to launch anyway
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      debugPrint('Call error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Cannot place call. Make sure your device supports calling and the number is valid.')));
     }
   }
 
@@ -100,12 +116,9 @@ class _AttendancePageState extends State<AttendancePage> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Transform.translate(
-              offset: const Offset(0, -appBarRadius),
-              child: Image.asset(
-                'assets/Dashboard9.png',
-                fit: BoxFit.cover,
-              ),
+            child: Image.asset(
+              'assets/Dashboard99.png',
+              fit: BoxFit.cover,
             ),
           ),
           if (loading)

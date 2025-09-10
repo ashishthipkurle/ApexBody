@@ -39,14 +39,23 @@ class _MuscleExercisePickerState extends State<MuscleExercisePicker> {
     });
   }
 
-  Future<Map<String, int>?> _showSetsRepsDialog() async {
+  Future<Map<String, dynamic>?> _showSetsRepsDialog(
+      Map<String, dynamic> exercise) async {
     final setsController = TextEditingController();
     final repsController = TextEditingController();
+    final distanceController = TextEditingController();
+    final speedController = TextEditingController();
 
-    return showDialog<Map<String, int>>(
+    final isCardio =
+        (exercise['type']?.toLowerCase().contains('cardio') ?? false) ||
+            (exercise['name']?.toLowerCase().contains('run') ?? false) ||
+            (exercise['name']?.toLowerCase().contains('cycle') ?? false) ||
+            (exercise['name']?.toLowerCase().contains('walk') ?? false);
+
+    return showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Enter Sets & Reps"),
+        title: const Text("Enter Exercise Details"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -60,6 +69,19 @@ class _MuscleExercisePickerState extends State<MuscleExercisePicker> {
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(labelText: "Reps"),
             ),
+            if (isCardio) ...[
+              TextField(
+                controller: distanceController,
+                keyboardType: TextInputType.number,
+                decoration:
+                    const InputDecoration(labelText: "Distance (km/meters)"),
+              ),
+              TextField(
+                controller: speedController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: "Speed (km/h)"),
+              ),
+            ],
           ],
         ),
         actions: [
@@ -71,8 +93,17 @@ class _MuscleExercisePickerState extends State<MuscleExercisePicker> {
             onPressed: () {
               final sets = int.tryParse(setsController.text);
               final reps = int.tryParse(repsController.text);
+              final distance =
+                  isCardio ? double.tryParse(distanceController.text) : null;
+              final speed =
+                  isCardio ? double.tryParse(speedController.text) : null;
               if (sets != null && reps != null) {
-                Navigator.pop(context, {"sets": sets, "reps": reps});
+                Navigator.pop(context, {
+                  "sets": sets,
+                  "reps": reps,
+                  "distance": distance,
+                  "speed": speed,
+                });
               }
             },
             child: const Text("OK"),
@@ -87,21 +118,44 @@ class _MuscleExercisePickerState extends State<MuscleExercisePicker> {
 
     final provider = Provider.of<DataProvider>(context, listen: false);
 
-    for (var exercise in _exercises.where((e) => _selectedExerciseIds.contains(e['id']))) {
-      final setsReps = await _showSetsRepsDialog();
-      if (setsReps == null) continue;
+    bool anyAdded = false;
+    for (var exercise
+        in _exercises.where((e) => _selectedExerciseIds.contains(e['id']))) {
+      final details = await _showSetsRepsDialog(exercise);
+      if (details == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Exercise canceled')),
+        );
+        continue;
+      }
 
       await provider.addExercisesToWorkout(
         workoutId: widget.workoutId,
         clientId: widget.clientId,
         muscleGroup: widget.muscleGroup,
         exercises: [exercise],
-        sets: setsReps["sets"]!,
-        reps: setsReps["reps"]!,
+        sets: details["sets"] ?? 0,
+        reps: details["reps"] ?? 0,
+        distance: details["distance"] is double
+            ? details["distance"]
+            : (details["distance"] != null
+                ? double.tryParse(details["distance"].toString())
+                : null),
+        speed: details["speed"] is double
+            ? details["speed"]
+            : (details["speed"] != null
+                ? double.tryParse(details["speed"].toString())
+                : null),
+      );
+      anyAdded = true;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Exercise added: ${exercise['name']}')),
       );
     }
 
-    Navigator.pop(context, true); // go back and refresh
+    if (anyAdded) {
+      Navigator.pop(context, true); // go back and refresh
+    }
   }
 
   @override
@@ -113,28 +167,29 @@ class _MuscleExercisePickerState extends State<MuscleExercisePicker> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
-        itemCount: _exercises.length,
-        itemBuilder: (context, index) {
-          final exercise = _exercises[index];
-          final isSelected = _selectedExerciseIds.contains(exercise['id']);
-          return ListTile(
-            title: Text(exercise['name']),
-            subtitle: Text(exercise['type'] ?? ''),
-            trailing: Checkbox(
-              value: isSelected,
-              onChanged: (value) {
-                setState(() {
-                  if (value == true) {
-                    _selectedExerciseIds.add(exercise['id']);
-                  } else {
-                    _selectedExerciseIds.remove(exercise['id']);
-                  }
-                });
+              itemCount: _exercises.length,
+              itemBuilder: (context, index) {
+                final exercise = _exercises[index];
+                final isSelected =
+                    _selectedExerciseIds.contains(exercise['id']);
+                return ListTile(
+                  title: Text(exercise['name']),
+                  subtitle: Text(exercise['type'] ?? ''),
+                  trailing: Checkbox(
+                    value: isSelected,
+                    onChanged: (value) {
+                      setState(() {
+                        if (value == true) {
+                          _selectedExerciseIds.add(exercise['id']);
+                        } else {
+                          _selectedExerciseIds.remove(exercise['id']);
+                        }
+                      });
+                    },
+                  ),
+                );
               },
             ),
-          );
-        },
-      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _saveSelectedExercises,
         icon: const Icon(Icons.check),

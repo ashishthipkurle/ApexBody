@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../services/local_weekly_goal_service.dart';
 import 'apexbody_home_page.dart';
 import '../widgets/loading_animation.dart';
 
@@ -83,7 +84,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     setState(() => _loggingOut = true);
     try {
-      await Provider.of<AuthProvider>(context, listen: false).signOut();
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      final currentUserId = auth.user?.id;
+      await auth.signOut();
+      // Preserve this user's local goals, delete others (if any)
+      try {
+        await LocalWeeklyGoalService.clearAllWeeklyGoalsExcept(currentUserId);
+      } catch (_) {}
       // Navigate to home (clear stack)
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
@@ -183,8 +190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   : SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        icon: const Icon(Icons.logout , color: Colors.white),
-
+                        icon: const Icon(Icons.logout, color: Colors.white),
                         label: const Text('Logout'),
                         style: ElevatedButton.styleFrom(
                             backgroundColor: theme.colorScheme.error),

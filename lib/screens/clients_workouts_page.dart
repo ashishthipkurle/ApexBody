@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:apexbody/screens/workout_detail_page.dart';
-import 'package:apexbody/providers/data_provider.dart';
+import 'workout_detail_page.dart';
+import '../providers/data_provider.dart';
 import 'package:provider/provider.dart';
 import '../models/user_model.dart';
 // ...existing code
-import 'package:apexbody/screens/client_history_page.dart';
+import 'client_history_page.dart';
+import 'client_weekly_goals_page.dart';
 import '../widgets/loading_animation.dart';
 
 class ClientsWorkoutsPage extends StatefulWidget {
@@ -64,18 +65,14 @@ class _ClientsWorkoutsPageState extends State<ClientsWorkoutsPage> {
           : Stack(
               children: [
                 Positioned.fill(
-                  child: Transform.translate(
-                    offset: Offset(0, -appBarRadius),
-                    child: Image.asset(
-                      'assets/Dashboard5.png',
-                      fit: BoxFit.cover,
-                      errorBuilder: (ctx, err, st) => Container(
-                        color: Color(0xFF0F172A),
-                        alignment: Alignment.center,
-                        child: const Text(
-                            'Failed to load assets/Dashboard5.png',
-                            style: TextStyle(color: Colors.white)),
-                      ),
+                  child: Image.asset(
+                    'assets/Dashboard55.png',
+                    fit: BoxFit.cover,
+                    errorBuilder: (ctx, err, st) => Container(
+                      color: Color(0xFF0F172A),
+                      alignment: Alignment.center,
+                      child: const Text('Failed to load assets/Dashboard55.png',
+                          style: TextStyle(color: Colors.white)),
                     ),
                   ),
                 ),
@@ -135,6 +132,20 @@ class _ClientsWorkoutsPageState extends State<ClientsWorkoutsPage> {
                                                           clientName:
                                                               client.name ??
                                                                   ''),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.flag),
+                                            tooltip: 'Weekly Goals',
+                                            onPressed: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      ClientWeeklyGoalsPage(
+                                                          clientId: client.id),
                                                 ),
                                               );
                                             },

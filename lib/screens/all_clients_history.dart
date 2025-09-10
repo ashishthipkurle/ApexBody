@@ -58,14 +58,11 @@ class _AllClientsHistoryPageState extends State<AllClientsHistoryPage> {
       children: [
         // Background image
         Positioned.fill(
-          child: Transform.translate(
-            offset: Offset(0, -appBarRadius),
-            child: Container(
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/Dashboard4.png'),
-                  fit: BoxFit.cover,
-                ),
+          child: Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/Dashboard44.png'),
+                fit: BoxFit.cover,
               ),
             ),
           ),

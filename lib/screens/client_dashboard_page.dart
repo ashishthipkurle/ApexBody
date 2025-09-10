@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/data_provider.dart';
 import '../providers/auth_provider.dart';
+import 'client_weekly_goals_page.dart';
 import '../widgets/loading_animation.dart';
 
 class ClientDashboardPage extends StatefulWidget {
@@ -151,6 +152,7 @@ class _ClientDashboardPageState extends State<ClientDashboardPage> {
     final pe = await provider.fetchPendingEnquiriesCount();
     final annRaw = await provider.fetchAnnouncementsRaw();
     await provider.fetchGymStatus();
+    if (!mounted) return;
     setState(() {
       totalMembers = tm;
       activeAdmins = aa;
@@ -162,12 +164,7 @@ class _ClientDashboardPageState extends State<ClientDashboardPage> {
     });
   }
 
-  void _navigateToAddEnquiry() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => AddEnquiryPage()),
-    );
-  }
+  // ...existing helpers
 
   @override
   Widget build(BuildContext context) {
@@ -213,11 +210,33 @@ class _ClientDashboardPageState extends State<ClientDashboardPage> {
                             ? Colors.green
                             : Colors.red),
                     _buildStatCardButton(
-                        'Pending Enquiries',
+                        'Enquiries',
                         pendingEnquiries.toString(),
-                        Icons.question_answer,
-                        Colors.orange,
-                        _navigateToAddEnquiry),
+                        Icons.email,
+                        Colors.orange, () async {
+                      // Open Add Enquiry page and refresh stats if an enquiry was added
+                      final result = await Navigator.push<bool?>(
+                        context,
+                        MaterialPageRoute(builder: (_) => AddEnquiryPage()),
+                      );
+                      if (result == true) {
+                        await _loadStats();
+                      }
+                    }),
+                    // _buildStatCardButton(
+                    //     'Weekly Goals', 'Set targets', Icons.flag, Colors.teal,
+                    //     () {
+                    //   final auth =
+                    //       Provider.of<AuthProvider>(context, listen: false);
+                    //   final userId = auth.user?.id;
+                    //   if (userId == null) return;
+                    //   Navigator.push(
+                    //     context,
+                    //     MaterialPageRoute(
+                    //         builder: (_) =>
+                    //             ClientWeeklyGoalsPage(clientId: userId)),
+                    //   );
+                    // }),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -279,16 +298,35 @@ class _AddEnquiryPageState extends State<AddEnquiryPage> {
     final subject = _subjectController.text.trim();
     final message = _messageController.text.trim();
     if (subject.isEmpty || message.isEmpty) return;
+    if (!mounted) return;
     setState(() => _loading = true);
     final provider = Provider.of<DataProvider>(context, listen: false);
-    final user = provider.selectedClient;
-    if (user == null) {
-      setState(() => _loading = false);
+    String? userId = provider.selectedClient?.id;
+    if (userId == null) {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      userId = auth.user?.id;
+    }
+
+    if (userId == null) {
+      if (mounted) setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No user found to attach enquiry')));
       return;
     }
-    await provider.addEnquiry(user.id, subject, message);
-    setState(() => _loading = false);
-    Navigator.pop(context);
+
+    try {
+      await provider.addEnquiry(userId, subject, message);
+      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Enquiry submitted')));
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to submit enquiry: $e')));
+    }
   }
 
   @override

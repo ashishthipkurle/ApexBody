@@ -9,7 +9,6 @@ import 'all_clients_history.dart';
 import 'profile_screen.dart';
 import 'settings_screen.dart';
 import 'gym_dashboard_page.dart';
-import 'exports_page.dart';
 import '../services/local_storage_service.dart';
 // CSV-only export; no excel package required
 import '../providers/data_provider.dart';
@@ -109,16 +108,19 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundImage: (auth.user?.profilePictureUrl != null && auth.user!.profilePictureUrl!.isNotEmpty)
-              ? NetworkImage(auth.user!.profilePictureUrl!)
-              : null,
-            child: (auth.user?.profilePictureUrl == null || auth.user!.profilePictureUrl!.isEmpty)
-              ? const Icon(Icons.admin_panel_settings, size: 48, color: Colors.white)
-              : null,
-          ),
-          const SizedBox(height: 8),
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundImage: (auth.user?.profilePictureUrl != null &&
+                              auth.user!.profilePictureUrl!.isNotEmpty)
+                          ? NetworkImage(auth.user!.profilePictureUrl!)
+                          : null,
+                      child: (auth.user?.profilePictureUrl == null ||
+                              auth.user!.profilePictureUrl!.isEmpty)
+                          ? const Icon(Icons.admin_panel_settings,
+                              size: 48, color: Colors.white)
+                          : null,
+                    ),
+                    const SizedBox(height: 8),
                     Text(auth.user?.name ?? 'Admin',
                         style:
                             const TextStyle(color: Colors.white, fontSize: 18)),
@@ -206,12 +208,94 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.history),
-                title: const Text('Exports history'),
-                onTap: () {
+                leading: const Icon(Icons.download_for_offline),
+                title: const Text('Export attendance (CSV)'),
+                onTap: () async {
                   Navigator.pop(context);
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const ExportsPage()));
+                  // Ask for a date range
+                  final picked = await showDateRangePicker(
+                    context: context,
+                    firstDate: DateTime(DateTime.now().year - 2, 1),
+                    lastDate: DateTime(DateTime.now().year + 2, 12),
+                    helpText: 'Pick start and end date for attendance export',
+                  );
+                  if (picked == null) return;
+
+                  final start = DateTime(
+                      picked.start.year, picked.start.month, picked.start.day);
+                  final end = DateTime(
+                      picked.end.year, picked.end.month, picked.end.day);
+
+                  final dp = Provider.of<DataProvider>(context, listen: false);
+                  try {
+                    final clients = await dp.fetchClients();
+                    // Build list of date columns from start..end
+                    final days = <DateTime>[];
+                    for (var d = start;
+                        !d.isAfter(end);
+                        d = d.add(const Duration(days: 1))) {
+                      days.add(d);
+                    }
+
+                    final header = [
+                      'Client Name',
+                      'Email',
+                      'Phone',
+                      ...days.map((d) =>
+                          '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}'),
+                    ];
+
+                    final List<List<String>> rows = [header];
+                    for (final client in clients) {
+                      final attendanceList =
+                          await dp.fetchAttendanceForClient(client.id);
+                      final Map<String, String> attMap = {};
+                      for (final att in attendanceList) {
+                        try {
+                          final dateStr = att['date']?.toString() ?? '';
+                          if (dateStr.isEmpty) continue;
+                          final dt = DateTime.parse(dateStr);
+                          if (!dt.isBefore(start) && !dt.isAfter(end)) {
+                            final key =
+                                '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+                            attMap[key] = att['check_in'] != null ? 'P' : 'A';
+                          }
+                        } catch (_) {}
+                      }
+
+                      final row = [
+                        client.name ?? '',
+                        client.email,
+                        client.phone ?? ''
+                      ];
+                      for (final d in days) {
+                        final key =
+                            '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+                        row.add(attMap[key] ?? 'A');
+                      }
+                      rows.add(row);
+                    }
+
+                    final csv = rows
+                        .map((e) => e.map((v) => '"$v"').join(','))
+                        .join('\n');
+                    final dir = await getApplicationDocumentsDirectory();
+                    final file = File(
+                        '${dir.path}${Platform.pathSeparator}attendance_range_${DateTime.now().millisecondsSinceEpoch}.csv');
+                    await file.writeAsString(csv);
+                    await LocalStorageService.addExportRecord({
+                      'name': file.path.split(Platform.pathSeparator).last,
+                      'timestamp': DateTime.now().toIso8601String(),
+                      'path': file.path,
+                    });
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content:
+                            Text('Attendance CSV exported: ${file.path}')));
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Attendance export failed: $e')));
+                  }
                 },
               ),
               ListTile(
@@ -232,7 +316,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 title: const Text('About'),
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Navigate to about page
+                  Navigator.pushNamed(context, '/about');
                 },
               ),
             ],

@@ -335,9 +335,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 150),
-              // Logo image
               Image.asset(
-                "assets/apexbody_logo.png",
+                "assets/ApexBody_logo.png",
                 width: 200,
                 fit: BoxFit.contain,
               ),

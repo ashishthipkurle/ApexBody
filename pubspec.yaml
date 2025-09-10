@@ -34,6 +34,10 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.11.0
 
+  build_runner: ^2.4.8
+  hive_generator: ^2.0.1
+
+
 flutter_icons:
   android: true
   ios: true
@@ -53,4 +57,9 @@ flutter:
     - assets/Dashboard5.png
     - assets/Dashboard6.png
     - assets/Dashboard9.png
+    - assets/Dashboard22.png
+    - assets/Dashboard44.png
+    - assets/Dashboard66.png
+    - assets/Dashboard55.png
+    - assets/Dashboard99.png
 

@@ -38,17 +38,14 @@ class _ClientHistoryPageState extends State<ClientHistoryPage> {
     return Stack(
       children: [
         Positioned.fill(
-          child: Transform.translate(
-            offset: const Offset(0, -appBarRadius),
-            child: Image.asset(
-              'assets/Dashboard6.png',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                color: Color(0xFF0F172A),
-                alignment: Alignment.center,
-                child: const Text('Failed to load assets/Dashboard6.png',
-                    style: TextStyle(color: Colors.white)),
-              ),
+          child: Image.asset(
+            'assets/Dashboard66.png',
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Container(
+              color: Color(0xFF0F172A),
+              alignment: Alignment.center,
+              child: const Text('Failed to load assets/Dashboard66.png',
+                  style: TextStyle(color: Colors.white)),
             ),
           ),
         ),

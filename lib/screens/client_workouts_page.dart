@@ -11,24 +11,22 @@ class ClientWorkoutsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
-    final topPadding = kToolbarHeight + MediaQuery.of(context).padding.top;
-    const double appBarRadius = 8.0;
+    // Only account for the status bar height here; there is no AppBar in this
+    // scaffold so adding kToolbarHeight pushed content down unnecessarily.
+    final topPadding = MediaQuery.of(context).padding.top + 8.0;
     return Scaffold(
       body: Stack(
         children: [
           // background image fills the body so it appears directly under the AppBar
           Positioned.fill(
-            child: Transform.translate(
-              offset: Offset(0, -appBarRadius),
-              child: Image.asset(
-                'assets/Dashboard5.png',
-                fit: BoxFit.cover,
-                errorBuilder: (ctx, err, st) => Container(
-                  color: Color(0xFF0F172A),
-                  alignment: Alignment.center,
-                  child: const Text('Failed to load assets/Dashboard5.png',
-                      style: TextStyle(color: Colors.white)),
-                ),
+            child: Image.asset(
+              'assets/Dashboard22.png',
+              fit: BoxFit.cover,
+              errorBuilder: (ctx, err, st) => Container(
+                color: Color(0xFF0F172A),
+                alignment: Alignment.center,
+                child: const Text('Failed to load assets/Dashboard22.png',
+                    style: TextStyle(color: Colors.white)),
               ),
             ),
           ),
@@ -51,16 +49,42 @@ class ClientWorkoutsPage extends StatelessWidget {
                   itemCount: list.length,
                   itemBuilder: (_, i) {
                     final w = list[i];
-                    return AnimatedListTile(
-                      leading: CircleAvatar(
-                          child: Text(w['title'][0].toUpperCase())),
-                      title: w['title'],
-                      subtitle: w['description'] ?? '',
-                      onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) =>
-                                  ClientWorkoutView(workoutId: w['id']))),
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10.0, vertical: 8.0),
+                      child: Card(
+                        color: Colors.white, //.withOpacity(0.7),
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Theme.of(context).primaryColor,
+                            child: Text(
+                              w['title'][0].toUpperCase(),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          title: Text(
+                            w['title'],
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 18),
+                          ),
+                          subtitle: Text(
+                            w['description'] ?? '',
+                            style:
+                                TextStyle(color: Colors.black.withOpacity(0.6)),
+                          ),
+                          onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                      ClientWorkoutView(workoutId: w['id']))),
+                        ),
+                      ),
                     );
                   });
             },
@@ -79,22 +103,18 @@ class ClientWorkoutView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dp = Provider.of<DataProvider>(context);
-    const double appBarRadius = 8.0;
     return Stack(
       children: [
         // background image
         Positioned.fill(
-          child: Transform.translate(
-            offset: Offset(0, -appBarRadius),
-            child: Image.asset(
-              'assets/Dashboard1.png',
-              fit: BoxFit.cover,
-              errorBuilder: (ctx, err, st) => Container(
-                color: Color(0xFF0F172A),
-                alignment: Alignment.center,
-                child: const Text('Failed to load assets/Dashboard1.png',
-                    style: TextStyle(color: Colors.white)),
-              ),
+          child: Image.asset(
+            'assets/Dashboard22.png',
+            fit: BoxFit.cover,
+            errorBuilder: (ctx, err, st) => Container(
+              color: Color(0xFF0F172A),
+              alignment: Alignment.center,
+              child: const Text('Failed to load assets/Dashboard22.png',
+                  style: TextStyle(color: Colors.white)),
             ),
           ),
         ),
@@ -107,13 +127,17 @@ class ClientWorkoutView extends StatelessWidget {
             elevation: 0,
           ),
           body: FutureBuilder(
-            future: dp.fetchWorkoutEntries(workoutId),
+            future: Future.wait([
+              dp.fetchWorkoutEntries(workoutId),
+              dp.fetchExerciseSets(workoutId),
+            ]),
             builder: (ctx, snap) {
               if (!snap.hasData)
                 return const Center(
                     child: LoadingAnimation(
                         size: 100, text: "Loading workout details..."));
-              final entries = (snap.data as List);
+              final entries = (snap.data as List)[0] as List;
+              final sets = (snap.data as List)[1] as List;
               if (entries.isEmpty)
                 return const Center(
                     child: Text('No entries yet',
@@ -125,6 +149,15 @@ class ClientWorkoutView extends StatelessWidget {
                 if (muscleHeading.isEmpty && e['muscle_group'] != null)
                   muscleHeading = e['muscle_group'];
               }
+              final selectedSet = sets.firstWhere(
+                (s) => s['is_selected'] == true,
+                orElse: () => <String, dynamic>{},
+              );
+              final selectedSetId =
+                  selectedSet.isNotEmpty ? selectedSet['id'] : null;
+              final selectedSetExercises = selectedSetId != null
+                  ? entries.where((e) => e['set_id'] == selectedSetId).toList()
+                  : [];
 
               return Column(
                 children: [
@@ -155,9 +188,19 @@ class ClientWorkoutView extends StatelessWidget {
                   ),
                   Expanded(
                     child: ListView.builder(
-                      itemCount: entries.length,
+                      itemCount: selectedSetExercises.length,
                       itemBuilder: (_, i) {
-                        final e = entries[i];
+                        final e = selectedSetExercises[i];
+                        final distance = e['distance'] != null
+                            ? e['distance'].toString()
+                            : null;
+                        final speed =
+                            e['speed'] != null ? e['speed'].toString() : null;
+                        String subtitle =
+                            'Sets ${e['sets'] ?? 0}, Reps ${e['reps'] ?? 0}, Weight ${e['weight'] ?? '—'}, Duration ${e['duration_minutes'] ?? 0} min';
+                        if (distance != null)
+                          subtitle += ', Distance $distance';
+                        if (speed != null) subtitle += ', Speed $speed';
                         return Padding(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8.0, vertical: 6.0),
@@ -165,8 +208,7 @@ class ClientWorkoutView extends StatelessWidget {
                             color: Colors.white.withOpacity(0.85),
                             child: ListTile(
                               title: Text(e['exercise_name']),
-                              subtitle: Text(
-                                  'Sets ${e['sets'] ?? 0}, Reps ${e['reps'] ?? 0}, Duration ${e['duration_minutes'] ?? 0} min'),
+                              subtitle: Text(subtitle),
                               trailing: Text('${e['calories'] ?? 0} kcal'),
                             ),
                           ),

@@ -4,6 +4,7 @@ import '../providers/auth_provider.dart';
 import 'client_dashboard_page.dart';
 import 'client_history_page.dart';
 import 'client_workouts_page.dart';
+import 'client_weekly_goals_page.dart';
 import 'profile_screen.dart';
 import 'settings_screen.dart';
 
@@ -20,7 +21,7 @@ class _ClientPanelState extends State<ClientPanel> {
 
   String _titleForIndex(int idx) {
     // When visiting the history tab, show the client's name + 'History'
-    if (idx == 2) {
+    if (idx == 3) {
       final auth = Provider.of<AuthProvider>(context, listen: false);
       final name = auth.user?.name ?? 'Client';
       return '$name History';
@@ -28,6 +29,8 @@ class _ClientPanelState extends State<ClientPanel> {
     switch (idx) {
       case 1:
         return 'My Workouts';
+      case 2:
+        return 'Weekly Goals';
       default:
         return 'Dashboard';
     }
@@ -41,6 +44,12 @@ class _ClientPanelState extends State<ClientPanel> {
     final pages = [
       const ClientDashboardPage(),
       const ClientWorkoutsPage(),
+      // Weekly goals tab (index 2)
+      if (auth.user != null)
+        ClientWeeklyGoalsPage(clientId: auth.user!.id)
+      else
+        const SizedBox.shrink(),
+      // Client history (index 3)
       ClientHistoryPage(
           clientId: auth.user!.id, clientName: auth.user?.name ?? ''),
     ];
@@ -84,16 +93,19 @@ class _ClientPanelState extends State<ClientPanel> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundImage: (auth.user?.profilePictureUrl != null && auth.user!.profilePictureUrl!.isNotEmpty)
-              ? NetworkImage(auth.user!.profilePictureUrl!)
-              : null,
-            child: (auth.user?.profilePictureUrl == null || auth.user!.profilePictureUrl!.isEmpty)
-              ? const Icon(Icons.account_circle, size: 48, color: Colors.white)
-              : null,
-          ),
-          const SizedBox(height: 8),
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundImage: (auth.user?.profilePictureUrl != null &&
+                              auth.user!.profilePictureUrl!.isNotEmpty)
+                          ? NetworkImage(auth.user!.profilePictureUrl!)
+                          : null,
+                      child: (auth.user?.profilePictureUrl == null ||
+                              auth.user!.profilePictureUrl!.isEmpty)
+                          ? const Icon(Icons.account_circle,
+                              size: 48, color: Colors.white)
+                          : null,
+                    ),
+                    const SizedBox(height: 8),
                     Text(auth.user?.name ?? '',
                         style:
                             const TextStyle(color: Colors.white, fontSize: 18)),
@@ -129,11 +141,32 @@ class _ClientPanelState extends State<ClientPanel> {
                 },
               ),
               ListTile(
+                leading: const Icon(Icons.flag),
+                title: const Text('Weekly Goals'),
+                onTap: () {
+                  Navigator.pop(context);
+                  final auth =
+                      Provider.of<AuthProvider>(context, listen: false);
+                  final userId = auth.user?.id;
+                  if (userId == null || userId.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('No user available')));
+                    return;
+                  }
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ClientWeeklyGoalsPage(clientId: userId),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.info_outline),
                 title: const Text('About'),
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Navigate to about page
+                  Navigator.pushNamed(context, '/about');
                 },
               ),
             ],
@@ -158,6 +191,10 @@ class _ClientPanelState extends State<ClientPanel> {
             BottomNavigationBarItem(
               icon: Icon(Icons.fitness_center),
               label: 'My Workouts',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.flag),
+              label: 'Goals',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.history),

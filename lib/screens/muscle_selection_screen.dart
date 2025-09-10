@@ -8,7 +8,10 @@ class MuscleSelectionScreen extends StatelessWidget {
     Key? key,
     required this.workoutId,
     required this.clientId,
+    this.setId,
   }) : super(key: key);
+
+  final String? setId;
 
   final String workoutId;
   final String clientId;
@@ -46,6 +49,7 @@ class MuscleSelectionScreen extends StatelessWidget {
           exercises: exerciseList,
           workoutId: workoutId,
           clientId: clientId,
+          setId: setId,
         ),
       ),
     );
@@ -59,7 +63,6 @@ class MuscleSelectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const double appBarRadius = 8.0;
     return Scaffold(
       extendBodyBehindAppBar: true,
       extendBody: true,
@@ -71,26 +74,22 @@ class MuscleSelectionScreen extends StatelessWidget {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Transform.translate(
-              offset: Offset(0, -appBarRadius),
-              child: Image.asset(
-                'assets/Dashboard2.png',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  color: Color(0xFF0F172A),
-                  alignment: Alignment.center,
-                  child: const Text('Failed to load assets/Dashboard2.png',
-                      style: TextStyle(color: Colors.white)),
-                ),
+            child: Image.asset(
+              'assets/Dashboard22.png',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: Color(0xFF0F172A),
+                alignment: Alignment.center,
+                child: const Text('Failed to load assets/Dashboard22.png',
+                    style: TextStyle(color: Colors.white)),
               ),
             ),
           ),
-
           // Content on top of the background image
           ListView.builder(
             padding: EdgeInsets.only(
               top: kToolbarHeight + MediaQuery.of(context).padding.top + 8,
-              bottom: 16,
+              // Removed bottom padding
             ),
             itemCount: muscles.length,
             itemBuilder: (context, index) {

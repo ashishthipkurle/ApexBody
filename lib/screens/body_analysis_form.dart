@@ -133,7 +133,7 @@ class _BodyAnalysisFormState extends State<BodyAnalysisForm> {
         Container(
           decoration: const BoxDecoration(
             image: DecorationImage(
-              image: AssetImage('assets/Dashboard6.png'),
+              image: AssetImage('assets/Dashboard66.png'),
               fit: BoxFit.cover,
             ),
           ),
