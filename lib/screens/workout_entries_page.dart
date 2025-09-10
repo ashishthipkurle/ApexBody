@@ -336,7 +336,7 @@ class _WorkoutEntriesPageState extends State<WorkoutEntriesPage> {
                                                                   .shade50),
                                                     ),
                                                     const SizedBox(width: 8),
-                                                    // Try to show Dist or Speed on the right; if neither, show a placeholder chip
+                                                    // Dist on the right (if available)
                                                     Expanded(
                                                       child: (e['distance'] !=
                                                               null)
@@ -346,24 +346,35 @@ class _WorkoutEntriesPageState extends State<WorkoutEntriesPage> {
                                                               backgroundColor:
                                                                   Colors.purple
                                                                       .shade50)
-                                                          : (e['speed'] != null)
-                                                              ? Chip(
-                                                                  label: Text(
-                                                                      'Speed: ${e['speed']}'),
-                                                                  backgroundColor:
-                                                                      Colors
-                                                                          .teal
-                                                                          .shade50)
-                                                              : Chip(
-                                                                  label:
-                                                                      Text(''),
-                                                                  backgroundColor:
-                                                                      Colors
-                                                                          .grey
-                                                                          .shade100),
+                                                          : Chip(
+                                                              label: Text(
+                                                                  'Dist: —'),
+                                                              backgroundColor:
+                                                                  Colors.grey
+                                                                      .shade100),
                                                     ),
                                                   ]),
                                                   const SizedBox(height: 8),
+                                                  // Additional row: Speed and Duration
+                                                  Row(children: [
+                                                    Expanded(
+                                                      child: Chip(
+                                                          label: Text(
+                                                              'Speed: ${e['speed']?.toString() ?? '—'}'),
+                                                          backgroundColor:
+                                                              Colors.teal
+                                                                  .shade50),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Expanded(
+                                                      child: Chip(
+                                                          label: Text(
+                                                              'Duration: ${e['duration_minutes']?.toString() ?? '—'} min'),
+                                                          backgroundColor:
+                                                              Colors.indigo
+                                                                  .shade50),
+                                                    ),
+                                                  ]),
                                                   // Show calories above date per request
                                                   Column(
                                                       mainAxisSize:

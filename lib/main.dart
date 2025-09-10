@@ -85,7 +85,8 @@ class MyApp extends StatelessWidget {
           cardTheme: CardThemeData(
             elevation: 6,
             margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
           pageTransitionsTheme: const PageTransitionsTheme(builders: {
             TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
