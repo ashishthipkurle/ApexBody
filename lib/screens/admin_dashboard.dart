@@ -9,6 +9,7 @@ import 'all_clients_history.dart';
 import 'profile_screen.dart';
 import 'settings_screen.dart';
 import 'gym_dashboard_page.dart';
+import 'exports_page.dart';
 import '../services/local_storage_service.dart';
 // CSV-only export; no excel package required
 import '../providers/data_provider.dart';
@@ -296,6 +297,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content: Text('Attendance export failed: $e')));
                   }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.history_edu),
+                title: const Text('Export History'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ExportsPage()),
+                  );
                 },
               ),
               ListTile(
