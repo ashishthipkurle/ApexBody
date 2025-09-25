@@ -46,11 +46,12 @@ Below are sample screens from ApexBody (see more in `assets/Screenshots/`):
 ### Admin Panel
 <div style="display: flex; gap: 12px; flex-wrap: wrap;">
   <img src="assets/Screenshots/Admin/dashboard.jpg" width="350" />
-  <img src="assets/Screenshots/Admin/workout_entries.jpg" width="350" />
+  <img src="assets/Screenshots/Admin/attendance.jpg" width="350" />
+  
 </div>
 <div style="display: flex; gap: 12px; flex-wrap: wrap;">
   <img src="assets/Screenshots/Admin/workout_details.jpg" width="350" />
-  <img src="assets/Screenshots/Admin/attendance.jpg" width="350" />
+  <img src="assets/Screenshots/Admin/workout_entries.jpg" width="350" />
 </div>
 <div style="display: flex; gap: 12px; flex-wrap: wrap;">
   <img src="assets/Screenshots/Admin/history.jpg" width="350" />
