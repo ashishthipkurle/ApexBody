@@ -1703,10 +1703,11 @@ class _ClientWeeklyGoalsPageState extends State<ClientWeeklyGoalsPage> {
                       if (s) {
                         setState(() {
                           _selectedExerciseIds.add(exName);
+                          // Use nullable defaults so empty inputs don't become 0
                           final defaultSets =
-                              int.tryParse(_muscleSetsCtrl.text) ?? 0;
+                              int.tryParse(_muscleSetsCtrl.text);
                           final defaultReps =
-                              int.tryParse(_muscleRepsCtrl.text) ?? 0;
+                              int.tryParse(_muscleRepsCtrl.text);
                           final defaultWeight =
                               _muscleWeightCtrl.text.isNotEmpty
                                   ? double.tryParse(_muscleWeightCtrl.text)
@@ -1773,13 +1774,14 @@ class _ClientWeeklyGoalsPageState extends State<ClientWeeklyGoalsPage> {
   void _addMuscleTargetWithExercises() {
     final group = _selectedMuscle ?? '';
     final selectedDay = _selectedDayForNewTarget;
-    final sets = int.tryParse(_muscleSetsCtrl.text) ?? 0;
-    final reps = int.tryParse(_muscleRepsCtrl.text) ?? 0;
+    final sets = int.tryParse(_muscleSetsCtrl.text);
+    final reps = int.tryParse(_muscleRepsCtrl.text);
 
     // require a day to add the target to
     if (group.isEmpty || selectedDay == null) return;
 
-    if (sets <= 0 && reps <= 0 && _selectedExerciseIds.isEmpty) return;
+    if ((sets ?? 0) <= 0 && (reps ?? 0) <= 0 && _selectedExerciseIds.isEmpty)
+      return;
 
     // Generate a stable _local_id for each selected exercise so top-level
     // and per-day entries reference the same instance id (prevents duplicates)
@@ -1805,6 +1807,22 @@ class _ClientWeeklyGoalsPageState extends State<ClientWeeklyGoalsPage> {
         '_local_id': selectedLocalIds[exName] ?? UniqueKey().toString(),
       };
     }).toList();
+
+    // Debug: print selected inputs and constructed exercises
+    try {
+      debugPrint(
+          'WEEKLY_GOAL_DEBUG: raw inputs - setsCtrl="${_muscleSetsCtrl.text}", repsCtrl="${_muscleRepsCtrl.text}", weightCtrl="${_muscleWeightCtrl.text}"');
+      debugPrint(
+          'WEEKLY_GOAL_DEBUG: parsed - sets=$sets, reps=$reps, defaultWeight=$defaultWeight');
+      debugPrint(
+          'WEEKLY_GOAL_DEBUG: selectedExerciseIds=${_selectedExerciseIds.toString()}');
+      debugPrint(
+          'WEEKLY_GOAL_DEBUG: selectedExerciseDetails=${_selectedExerciseDetails.toString()}');
+      debugPrint(
+          'WEEKLY_GOAL_DEBUG: constructed exercises=${exercises.toString()}');
+    } catch (e) {
+      debugPrint('WEEKLY_GOAL_DEBUG: error printing debug data: $e');
+    }
 
     setState(() {
       // Build daily targets where only the selected day is populated
@@ -2496,21 +2514,34 @@ class _ClientWeeklyGoalsPageState extends State<ClientWeeklyGoalsPage> {
                     grouped[muscleName]!.add({
                       'day': d,
                       'name': item['name'] ?? item['exercise_name'] ?? '',
-                      'sets':
-                          ((item.containsKey('sets') && item['sets'] != null)
-                                  ? item['sets']
-                                  : (setsFallback ?? ''))
-                              .toString(),
-                      'reps':
-                          ((item.containsKey('reps') && item['reps'] != null)
-                                  ? item['reps']
-                                  : (repsFallback ?? ''))
-                              .toString(),
-                      'weight': ((item.containsKey('weight') &&
-                                  item['weight'] != null)
-                              ? item['weight']
-                              : (weightFallback ?? ''))
-                          .toString(),
+                      // Show explicit exercise-level values when present.
+                      // If missing, only use the day-level fallback when it's
+                      // a positive number; otherwise render as blank.
+                      'sets': () {
+                        final s =
+                            (item.containsKey('sets') && item['sets'] != null)
+                                ? item['sets']
+                                : (setsFallback is num && setsFallback > 0
+                                    ? setsFallback
+                                    : '');
+                        return s.toString();
+                      }(),
+                      'reps': () {
+                        final r =
+                            (item.containsKey('reps') && item['reps'] != null)
+                                ? item['reps']
+                                : (repsFallback is num && repsFallback > 0
+                                    ? repsFallback
+                                    : '');
+                        return r.toString();
+                      }(),
+                      'weight': () {
+                        final w = (item.containsKey('weight') &&
+                                item['weight'] != null)
+                            ? item['weight']
+                            : (weightFallback != null ? weightFallback : '');
+                        return w.toString();
+                      }(),
                     });
                   } catch (_) {}
                 }

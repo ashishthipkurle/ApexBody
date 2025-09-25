@@ -17,7 +17,7 @@ class ClientWorkoutsPage extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // background image fills the body so it appears directly under the AppBar
+          // background image
           Positioned.fill(
             child: Image.asset(
               'assets/Dashboard22.png',
@@ -27,6 +27,22 @@ class ClientWorkoutsPage extends StatelessWidget {
                 alignment: Alignment.center,
                 child: const Text('Failed to load assets/Dashboard22.png',
                     style: TextStyle(color: Colors.white)),
+              ),
+            ),
+          ),
+          // gradient overlay for glassmorphism effect
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withOpacity(0.6),
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.3)
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
             ),
           ),
@@ -49,34 +65,101 @@ class ClientWorkoutsPage extends StatelessWidget {
                   itemCount: list.length,
                   itemBuilder: (_, i) {
                     final w = list[i];
+                    // Choose an icon based on workout type (if available)
+                    IconData workoutIcon = Icons.fitness_center;
+                    if ((w['title'] ?? '').toLowerCase().contains('cardio')) {
+                      workoutIcon = Icons.directions_run;
+                    } else if ((w['title'] ?? '')
+                        .toLowerCase()
+                        .contains('yoga')) {
+                      workoutIcon = Icons.self_improvement;
+                    } else if ((w['title'] ?? '')
+                        .toLowerCase()
+                        .contains('stretch')) {
+                      workoutIcon = Icons.accessibility_new;
+                    }
                     return Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10.0, vertical: 8.0),
-                      child: Card(
-                        color: Colors.white, //.withOpacity(0.7),
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                      child: AnimatedContainer(
+                        duration: Duration(milliseconds: 400),
+                        curve: Curves.easeOut,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.85),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 16,
+                              offset: Offset(0, 8),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: Theme.of(context)
+                                .primaryColor
+                                .withOpacity(0.15),
+                            width: 1.5,
+                          ),
                         ),
                         child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: Theme.of(context).primaryColor,
-                            child: Text(
-                              w['title'][0].toUpperCase(),
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold),
+                          leading: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [
+                                  Theme.of(context).primaryColor,
+                                  Theme.of(context).colorScheme.secondary
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            child: CircleAvatar(
+                              backgroundColor: Colors.transparent,
+                              radius: 24,
+                              child: Icon(
+                                workoutIcon,
+                                color: Colors.white,
+                                size: 28,
+                              ),
                             ),
                           ),
                           title: Text(
                             w['title'],
                             style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 18),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                              letterSpacing: 0.5,
+                            ),
                           ),
-                          subtitle: Text(
-                            w['description'] ?? '',
-                            style:
-                                TextStyle(color: Colors.black.withOpacity(0.6)),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Text(
+                              w['description'] ?? '',
+                              style: TextStyle(
+                                color: Colors.black.withOpacity(0.7),
+                                fontSize: 15,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          trailing: Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .primaryColor
+                                  .withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'View',
+                              style: TextStyle(
+                                color: Theme.of(context).primaryColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                           onTap: () => Navigator.push(
                               context,

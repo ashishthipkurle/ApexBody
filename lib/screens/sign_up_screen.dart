@@ -52,7 +52,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
     'Spouse',
     'Sibling',
     'Friend',
+    'Son',
+    'Daughter',
     'Other'
+
   ];
 
   @override
