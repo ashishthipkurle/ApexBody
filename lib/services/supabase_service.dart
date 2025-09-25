@@ -6,8 +6,8 @@ class SupabaseService {
   SupabaseService._internal();
 
   // TODO: replace with your Supabase details
-  final String supabaseUrl = 'https://uolzrncnaoccwnqbbwuy.supabase.co';
-  final String supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvbHpybmNuYW9jY3ducWJid3V5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwMDgyOTMsImV4cCI6MjA3MDU4NDI5M30.cihslnZyGCl4TSxcx9EuoW5_6oEK7jzwvZumNgmwwLw';
+  final String supabaseUrl = "";
+  final String supabaseKey = "";
 
   Future<void> init() async {
     await Supabase.initialize(

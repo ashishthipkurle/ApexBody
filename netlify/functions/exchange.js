@@ -1,6 +1,6 @@
 // Serverless function to exchange Supabase recovery code for an access_token
 // Requires SERVICE_ROLE_KEY environment variable in Netlify site settings.
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://uolzrncnaoccwnqbbwuy.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
 
 exports.handler = async function(event, context) {
   // Allow only POST
