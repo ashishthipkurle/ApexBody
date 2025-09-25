@@ -35,25 +35,39 @@ MIT
 Below are sample screens from ApexBody (see more in `assets/Screenshots/`):
 
 ### Login & Signup
-<img src="assets/Screenshots/Login.jpg" width="350" />
-<img src="assets/Screenshots/Signup.jpg" width="350" />
+<div style="display: flex; gap: 12px;">
+  <img src="assets/Screenshots/Login.jpg" width="350" />
+  <img src="assets/Screenshots/Signup.jpg" width="350" />
+</div>
 
 ### Starting Page
 <img src="assets/Screenshots/Starting_page.jpg" width="350" />
 
 ### Admin Panel
-<img src="assets/Screenshots/Admin/dashboard.jpg" width="350" />
-<img src="assets/Screenshots/Admin/workout_entries.jpg" width="350" />
-<img src="assets/Screenshots/Admin/workout_details.jpg" width="350" />
-<img src="assets/Screenshots/Admin/attendance.jpg" width="350" />
-<img src="assets/Screenshots/Admin/history.jpg" width="350" />
-<img src="assets/Screenshots/Admin/sidebar.jpg" width="350" />
+<div style="display: flex; gap: 12px; flex-wrap: wrap;">
+  <img src="assets/Screenshots/Admin/dashboard.jpg" width="350" />
+  <img src="assets/Screenshots/Admin/workout_entries.jpg" width="350" />
+</div>
+<div style="display: flex; gap: 12px; flex-wrap: wrap;">
+  <img src="assets/Screenshots/Admin/workout_details.jpg" width="350" />
+  <img src="assets/Screenshots/Admin/attendance.jpg" width="350" />
+</div>
+<div style="display: flex; gap: 12px; flex-wrap: wrap;">
+  <img src="assets/Screenshots/Admin/history.jpg" width="350" />
+  <img src="assets/Screenshots/Admin/sidebar.jpg" width="350" />
+</div>
 
 ### Client Panel
-<img src="assets/Screenshots/Client/dashboard.jpg" width="350" />
-<img src="assets/Screenshots/Client/weeklygoal.jpg" width="350" />
-<img src="assets/Screenshots/Client/workout.jpg" width="350" />
-<img src="assets/Screenshots/Client/history.jpg" width="350" />
-<img src="assets/Screenshots/Client/Sidebar.jpg" width="350" />
+<div style="display: flex; gap: 12px; flex-wrap: wrap;">
+  <img src="assets/Screenshots/Client/dashboard.jpg" width="350" />
+  <img src="assets/Screenshots/Client/weeklygoal.jpg" width="350" />
+</div>
+<div style="display: flex; gap: 12px; flex-wrap: wrap;">
+  <img src="assets/Screenshots/Client/workout.jpg" width="350" />
+  <img src="assets/Screenshots/Client/history.jpg" width="350" />
+</div>
+<div style="display: flex; gap: 12px; flex-wrap: wrap;">
+  <img src="assets/Screenshots/Client/Sidebar.jpg" width="350" />
+</div>
 
 ---
