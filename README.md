@@ -35,25 +35,25 @@ MIT
 Below are sample screens from ApexBody (see more in `assets/Screenshots/`):
 
 ### Login & Signup
-![Login](assets/Screenshots/Login.jpg)
-![Signup](assets/Screenshots/Signup.jpg)
+<img src="assets/Screenshots/Login.jpg" width="350" />
+<img src="assets/Screenshots/Signup.jpg" width="350" />
 
 ### Starting Page
-![Starting Page](assets/Screenshots/Starting_page.jpg)
+<img src="assets/Screenshots/Starting_page.jpg" width="350" />
 
 ### Admin Panel
-![Admin Dashboard](assets/Screenshots/Admin/dashboard.jpg)
-![Workout Entries](assets/Screenshots/Admin/workout_entries.jpg)
-![Workout Details](assets/Screenshots/Admin/workout_details.jpg)
-![Attendance](assets/Screenshots/Admin/attendance.jpg)
-![History](assets/Screenshots/Admin/history.jpg)
-![Sidebar](assets/Screenshots/Admin/sidebar.jpg)
+<img src="assets/Screenshots/Admin/dashboard.jpg" width="350" />
+<img src="assets/Screenshots/Admin/workout_entries.jpg" width="350" />
+<img src="assets/Screenshots/Admin/workout_details.jpg" width="350" />
+<img src="assets/Screenshots/Admin/attendance.jpg" width="350" />
+<img src="assets/Screenshots/Admin/history.jpg" width="350" />
+<img src="assets/Screenshots/Admin/sidebar.jpg" width="350" />
 
 ### Client Panel
-![Client Dashboard](assets/Screenshots/Client/dashboard.jpg)
-![Weekly Goal](assets/Screenshots/Client/weeklygoal.jpg)
-![Workout](assets/Screenshots/Client/workout.jpg)
-![History](assets/Screenshots/Client/history.jpg)
-![Sidebar](assets/Screenshots/Client/Sidebar.jpg)
+<img src="assets/Screenshots/Client/dashboard.jpg" width="350" />
+<img src="assets/Screenshots/Client/weeklygoal.jpg" width="350" />
+<img src="assets/Screenshots/Client/workout.jpg" width="350" />
+<img src="assets/Screenshots/Client/history.jpg" width="350" />
+<img src="assets/Screenshots/Client/Sidebar.jpg" width="350" />
 
 ---
